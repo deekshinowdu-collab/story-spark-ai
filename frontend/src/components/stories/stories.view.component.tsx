@@ -4,6 +4,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { useCreatePostMutation } from "../../redux/apis/post.api";
 import jsPDF from "jspdf";
 import BookmarkButton from "../BookmarkButton";
+import logo from "../../assets/logoNew.png";
 
 export interface IStories {
   uuid: string;
@@ -32,6 +33,7 @@ const StoriesViewComponent: React.FC<StoriesComponentProps> = ({
   const [selectedStory, setSelectedStory] = useState<IStories | null>(null);
   const [topics, setTopics] = useState<ITopicData[]>(topicsData);
   const [selectTopics, setSelectTopics] = useState<ITopicData[]>([]);
+  const [newTopicTitle, setNewTopicTitle] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const [createPost] = useCreatePostMutation();
@@ -67,16 +69,60 @@ useEffect(() => {
   };
 
   autoSaveStory();
-}, [selectedStory, isLogin, selectTopics]);
+}, [selectedStory, isLogin, selectTopics, createPost]);
 
   const handelStorySelection = (story: IStories) => {
     setSelectedStory(story);
   };
 
   const handleTopicClick = (index: number) => {
-    const updatedTopics = [...topics];
-    updatedTopics[index].selected = !updatedTopics[index].selected;
-    setTopics(updatedTopics);
+    setTopics((currentTopics) =>
+      currentTopics.map((topic, topicIndex) =>
+        topicIndex === index
+          ? { ...topic, selected: !topic.selected }
+          : topic
+      )
+    );
+  };
+
+  const handleAddTopic = () => {
+    const title = newTopicTitle.trim();
+
+    if (!title) {
+      toast.error("Please enter a topic.");
+      return;
+    }
+
+    const normalizedTitle = title.startsWith("#") ? title : `#${title}`;
+    const topicExists = topics.some(
+      (topic) => topic.title.toLowerCase() === normalizedTitle.toLowerCase()
+    );
+
+    if (topicExists) {
+      toast.error("This topic already exists.");
+      return;
+    }
+
+    setTopics((currentTopics) => [
+      ...currentTopics,
+      {
+        title: normalizedTitle,
+        color: "bg-indigo-100 text-indigo-800",
+        selected: true,
+      },
+    ]);
+    setNewTopicTitle("");
+  };
+
+  const handleRemoveTopic = (index: number) => {
+    if (topics.length <= 2) {
+      toast.error("At least 2 topics are required.");
+      return;
+    }
+
+    setTopics((currentTopics) =>
+      currentTopics.filter((_, topicIndex) => topicIndex !== index)
+    );
   };
 
   const handleCopyStory = async () => {
@@ -88,28 +134,229 @@ useEffect(() => {
     }
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (!selectedStory) {
       toast.error("No story available to export.");
       return;
     }
 
+    const toastId = toast.loading("Preparing your premium PDF...");
+
     try {
-      const doc = new jsPDF();
-      const title = selectedStory.title || "Story";
+      // Helper to load image assets asynchronously with a safe timeout
+      const loadImageWithTimeout = (src: string, timeoutMs: number = 3000): Promise<HTMLImageElement> => {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          const timeout = setTimeout(() => {
+            img.src = ""; // stop loading
+            reject(new Error(`Timeout loading image: ${src}`));
+          }, timeoutMs);
+
+          img.onload = () => {
+            clearTimeout(timeout);
+            resolve(img);
+          };
+          img.onerror = (e) => {
+            clearTimeout(timeout);
+            reject(e);
+          };
+          img.src = src;
+        });
+      };
+
+      let logoImg: HTMLImageElement | null = null;
+      let storyImg: HTMLImageElement | null = null;
+
+      try {
+        logoImg = await loadImageWithTimeout(logo);
+      } catch (err) {
+        console.warn("Failed to load StorySparkAI logo for PDF", err);
+      }
+
+      if (selectedStory.imageURL) {
+        try {
+          storyImg = await loadImageWithTimeout(selectedStory.imageURL);
+        } catch (err) {
+          console.warn("Failed to load story banner image for PDF", err);
+        }
+      }
+
+      // Initialize A4 PDF document (210mm x 297mm)
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const title = selectedStory.title || "Untitled Story";
       const content = selectedStory.content || "";
+      const tag = (selectedStory.tag || "STORY").toUpperCase();
 
-      doc.setFontSize(18);
-      doc.text(title, 15, 20);
+      const leftMargin = 20;
+      const rightMargin = 20;
+      const topMargin = 20;
+      const bottomMargin = 20;
+      const printableWidth = 210 - leftMargin - rightMargin; // 170 mm
+      const maxY = 297 - bottomMargin - 10; // Bottom boundary (267mm) leaving room for footer
 
-      doc.setFontSize(12);
-      const splitText = doc.splitTextToSize(content, 180);
-      doc.text(splitText, 15, 35);
+      let yCursor = topMargin;
 
-      doc.save(`${title}.pdf`);
-      toast.success("PDF downloaded!");
+      // 1. Header (Logo & Sub-header)
+      if (logoImg) {
+        const logoHeight = 8;
+        const logoWidth = (logoImg.width / logoImg.height) * logoHeight;
+        doc.addImage(logoImg, "PNG", leftMargin, yCursor, logoWidth, logoHeight);
+      } else {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.setTextColor(99, 102, 241); // Brand Indigo
+        doc.text("StorySparkAI", leftMargin, yCursor + 6);
+      }
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(148, 163, 184); // Slate 400
+      doc.text("PREMIUM AI GENERATED STORY", 190, yCursor + 5, { align: "right" });
+
+      yCursor += 10;
+
+      // Header Divider Line
+      doc.setDrawColor(99, 102, 241); // Brand Indigo
+      doc.setLineWidth(0.5);
+      doc.line(leftMargin, yCursor, 190, yCursor);
+
+      yCursor += 8;
+
+      // 2. Story Banner Image (only on Page 1)
+      if (storyImg) {
+        const bannerHeight = 55;
+        doc.addImage(storyImg, "JPEG", leftMargin, yCursor, printableWidth, bannerHeight);
+        yCursor += bannerHeight + 8;
+      }
+
+      // 3. Story Title
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(22);
+      doc.setTextColor(30, 41, 59); // Slate 800
+      const splitTitle = doc.splitTextToSize(title, printableWidth);
+      splitTitle.forEach((line: string) => {
+        doc.text(line, leftMargin, yCursor);
+        yCursor += 9;
+      });
+
+      yCursor += 1;
+
+      // 4. Meta Row (Generated Date & Genre Pill Badge)
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(100, 116, 139); // Slate 500
+      const formattedDate = new Date().toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      doc.text(`Generated on ${formattedDate}`, leftMargin, yCursor);
+
+      // Genre pill badge on the right
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7.5);
+      const tagWidth = doc.getTextWidth(tag);
+      const chipWidth = tagWidth + 5;
+      const chipHeight = 5;
+      const chipX = 190 - chipWidth;
+      const chipY = yCursor - 3.8;
+
+      doc.setFillColor(99, 102, 241); // Brand Indigo background
+      doc.roundedRect(chipX, chipY, chipWidth, chipHeight, 1, 1, "F");
+
+      doc.setTextColor(255, 255, 255); // White text inside pill
+      doc.text(tag, chipX + 2.5, chipY + 3.5);
+
+      yCursor += 4.5;
+
+      // Meta row bottom line
+      doc.setDrawColor(226, 232, 240); // Slate 200
+      doc.setLineWidth(0.2);
+      doc.line(leftMargin, yCursor, 190, yCursor);
+
+      yCursor += 10;
+
+      // 5. Story Paragraphs Flowing
+      const paragraphs = content.split(/\n+/);
+      const lineHeight = 6.5;
+      const paragraphSpacing = 4.5;
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.setTextColor(30, 41, 59); // Slate 800
+
+      paragraphs.forEach((para: string, pIdx: number) => {
+        const cleanPara = para.trim();
+        if (!cleanPara) return;
+
+        const lines = doc.splitTextToSize(cleanPara, printableWidth);
+        lines.forEach((line: string) => {
+          if (yCursor > maxY) {
+            doc.addPage();
+            yCursor = 30; // Top padding for subsequent pages
+          }
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(11);
+          doc.setTextColor(30, 41, 59); // Slate 800
+          doc.text(line, leftMargin, yCursor);
+          yCursor += lineHeight;
+        });
+
+        if (pIdx < paragraphs.length - 1) {
+          yCursor += paragraphSpacing;
+        }
+      });
+
+      // 6. Running Header and Footer generation
+      const totalPages = doc.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+
+        // Footer line
+        doc.setDrawColor(241, 245, 249);
+        doc.setLineWidth(0.25);
+        doc.line(leftMargin, 280, 190, 280);
+
+        // Footer Text
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(100, 116, 139); // Slate 500
+        doc.text("Generated with StorySparkAI", leftMargin, 285);
+        doc.text(`Page ${i} of ${totalPages}`, 190, 285, { align: "right" });
+
+        // Header on pages 2+
+        if (i > 1) {
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(8);
+          doc.setTextColor(99, 102, 241); // Brand Indigo
+          doc.text("StorySparkAI", leftMargin, 14);
+
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(8);
+          doc.setTextColor(148, 163, 184); // Slate 400
+          const headerTitle = title.length > 50 ? title.substring(0, 50) + "..." : title;
+          doc.text(headerTitle, 190, 14, { align: "right" });
+
+          doc.setDrawColor(241, 245, 249);
+          doc.setLineWidth(0.2);
+          doc.line(leftMargin, 17, 190, 17);
+        }
+      }
+
+      // Save PDF with sanitized name
+      const safeTitle = title.replace(/[^a-z0-9]/gi, "_").toLowerCase();
+      doc.save(`${safeTitle}.pdf`);
+      toast.dismiss(toastId);
+      toast.success("Premium PDF downloaded!");
     } catch (error) {
       console.error(error);
+      toast.dismiss(toastId);
       toast.error("Failed to export PDF.");
     }
   };
@@ -121,6 +368,10 @@ useEffect(() => {
     }
     if (!selectedStory) {
       toast.error("No story available. Please generate a story first.");
+      return;
+    }
+    if (selectTopics.length < 2) {
+      toast.error("Please select at least 2 topics.");
       return;
     }
     const post: IPost = {
@@ -254,17 +505,65 @@ useEffect(() => {
               <h3 className="text-lg font-bold text-slate-200 mb-4">
                 Select Topics
               </h3>
+              <div className="flex flex-col sm:flex-row gap-3 mb-4">
+                <input
+                  type="text"
+                  value={newTopicTitle}
+                  onChange={(event) => setNewTopicTitle(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      handleAddTopic();
+                    }
+                  }}
+                  placeholder="Add related topic"
+                  className="flex-1 rounded-lg border border-slate-600 bg-slate-900/70 px-4 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                />
+                <button
+                  type="button"
+                  className="rounded-lg px-4 py-2 bg-blue-600 text-white font-semibold cursor-pointer hover:bg-blue-500 transition-colors"
+                  onClick={handleAddTopic}
+                >
+                  Add Topic
+                </button>
+              </div>
               <div className="flex flex-wrap gap-2">
-                {topics.map((topic, index) => (
-                  <span
-                    key={index}
-                    className={`px-4 py-1.5 ${topic.color} rounded-full text-sm font-medium transition-transform hover:scale-105 cursor-pointer shadow-sm`}
-                    onClick={() => handleTopicClick(index)}
-                  >
-                    {topic.selected ? <i className="fa-solid fa-check"></i> : <i className="fa-solid fa-plus"></i>}{" "}
-                    {topic.title}
-                  </span>
-                ))}
+                {selectedStory ? (
+                  <>
+                    {topics.map((topic, index) => (
+                      <span
+                        key={index}
+                        className={`inline-flex items-center gap-2 px-4 py-1.5 ${topic.color} rounded-full text-sm font-medium transition-transform hover:scale-105 shadow-sm`}
+                      >
+                        <button
+                          type="button"
+                          className="cursor-pointer"
+                          onClick={() => handleTopicClick(index)}
+                        >
+                          {topic.selected ? (
+                            <i className="fa-solid fa-check"></i>
+                          ) : (
+                            <i className="fa-solid fa-plus"></i>
+                          )}{" "}
+                          {topic.title}
+                        </button>
+                        <button
+                          type="button"
+                          className="cursor-pointer border-l border-current/30 pl-2 disabled:cursor-not-allowed disabled:opacity-40"
+                          onClick={() => handleRemoveTopic(index)}
+                          disabled={topics.length <= 2}
+                          aria-label={`Remove ${topic.title}`}
+                        >
+                          <i className="fa-solid fa-xmark"></i>
+                        </button>
+                      </span>
+                    ))}
+                  </>
+                ) : (
+                  <p className="text-gray-400">
+                    No topics available. Please generate a story first.
+                  </p>
+                )}
               </div>
             </div>
           </div>

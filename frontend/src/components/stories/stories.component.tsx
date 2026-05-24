@@ -301,7 +301,7 @@ const handleClearPrompt = () => {
             const form = e.currentTarget.closest("form");
             if (form) form.requestSubmit();
           }
-        }}      
+        }}
         />
 
       {textareaValue.length > 0 && (

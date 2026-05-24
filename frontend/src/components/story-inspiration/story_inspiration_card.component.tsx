@@ -78,7 +78,7 @@ const StoryInspirationCard: React.FC<StoryInspirationCardProps> = ({ story }) =>
   };
 
   return (
-    <div className="group relative bg-[#0B0F19]/40 backdrop-blur-xl border border-white/5 hover:border-indigo-500/40 rounded-2xl overflow-hidden shadow-xl hover:shadow-[0_0_30px_rgba(99,102,241,0.15)] transition-all duration-500 flex flex-col h-full transform hover:-translate-y-1.5">
+    <div className="motion-card group relative bg-[#0B0F19]/40 backdrop-blur-xl border border-white/5 hover:border-indigo-500/40 rounded-2xl overflow-hidden shadow-xl flex flex-col h-full">
       
       {/* Zoom-in Card Cover Image */}
       <div className="relative h-44 w-full overflow-hidden bg-[#0A0E17]">
@@ -89,7 +89,7 @@ const StoryInspirationCard: React.FC<StoryInspirationCardProps> = ({ story }) =>
           onError={(e) => {
             e.currentTarget.style.display = "none";
           }}
-          className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
+          className="motion-image w-full h-full object-cover"
         />
         
         {/* Genre tag */}
@@ -144,7 +144,7 @@ const StoryInspirationCard: React.FC<StoryInspirationCardProps> = ({ story }) =>
               <div
                 key={i}
                 onClick={() => setSelectedPromptIdx(i)}
-                className={`p-3 rounded-lg border text-xs leading-relaxed transition-all duration-300 cursor-pointer ${
+                className={`motion-card-subtle p-3 rounded-lg border text-xs leading-relaxed cursor-pointer ${
                   selectedPromptIdx === i
                     ? "bg-indigo-500/10 border-indigo-500/40 text-indigo-200 shadow-sm"
                     : "bg-white/[0.01] border-white/5 text-gray-400 hover:bg-white/[0.03] hover:text-gray-300"
@@ -166,10 +166,10 @@ const StoryInspirationCard: React.FC<StoryInspirationCardProps> = ({ story }) =>
         {/* Generate CTA Button */}
         <button
           onClick={handleGenerateSimilar}
-          className="w-full mt-auto py-3.5 rounded-xl bg-gradient-to-r from-blue-600/80 to-indigo-600/80 hover:from-blue-600 hover:to-indigo-600 border border-white/10 text-white font-semibold transition-all duration-300 flex items-center justify-center gap-2 group/btn shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:shadow-indigo-500/20"
+          className="motion-cta w-full mt-auto py-3.5 rounded-xl bg-gradient-to-r from-blue-600/80 to-indigo-600/80 hover:from-blue-600 hover:to-indigo-600 border border-white/10 hover:border-indigo-300/30 text-white font-semibold flex items-center justify-center gap-2 group/btn shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:shadow-lg hover:shadow-indigo-500/25"
         >
           <span>Generate Similar Story</span>
-          <i className="fas fa-wand-magic-sparkles text-sm transform group-hover/btn:translate-x-0.5 group-hover/btn:rotate-12 transition-all duration-300"></i>
+          <i className="motion-icon fas fa-wand-magic-sparkles text-sm group-hover/btn:translate-x-0.5 group-hover/btn:rotate-12"></i>
         </button>
 
       </div>

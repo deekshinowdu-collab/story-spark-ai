@@ -29,7 +29,7 @@ const LatestPostsComponent = () => {
             <div
               key={post._id}
               onClick={() => navigate(`/post/${post._id}`)}
-              className="bg-blue-500/10 rounded-lg shadow-sm p-6 cursor-pointer hover:bg-blue-500/20 transition-colors duration-200 relative group"
+              className="motion-card-subtle bg-blue-500/10 rounded-lg shadow-sm border border-slate-700/30 p-6 cursor-pointer hover:bg-blue-500/20 hover:border-blue-400/30 relative group"
             >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center">

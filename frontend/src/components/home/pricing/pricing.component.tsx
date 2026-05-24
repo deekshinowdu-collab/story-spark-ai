@@ -1,5 +1,4 @@
 import React from "react";
-import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 
 const pricingPlans = [
@@ -13,9 +12,10 @@ const pricingPlans = [
       "Community access",
     ],
     buttonLabel: "Get Started",
-    buttonStyle: "bg-gray-500 text-gray-300 hover:bg-gray-600",
+    buttonStyle:
+      "bg-gray-600 text-gray-200 hover:bg-gray-500 hover:shadow-gray-500/20",
     highlight: false,
-    linkto: "/signup"
+    linkto: "/signup",
   },
   {
     title: "Pro",
@@ -27,12 +27,12 @@ const pricingPlans = [
       "Priority support",
       "Analytics dashboard",
     ],
-    
+
     buttonLabel: "Start Pro Trial",
-    buttonStyle: "bg-indigo-600 text-white hover:bg-indigo-700",
+    buttonStyle:
+      "bg-indigo-600 text-white hover:bg-indigo-500 hover:shadow-indigo-500/30",
     highlight: true,
-    linkto: "/payment"
-    
+    linkto: "/payment",
   },
   {
     title: "Enterprise",
@@ -45,9 +45,10 @@ const pricingPlans = [
       "24/7 dedicated support",
     ],
     buttonLabel: "Contact Sales",
-    buttonStyle: "bg-gray-800 text-white hover:bg-gray-900",
+    buttonStyle:
+      "bg-slate-800 text-white hover:bg-slate-700 hover:shadow-blue-500/20",
     highlight: false,
-    linkto: "/payment"
+    linkto: "/payment",
   },
 ];
 
@@ -67,33 +68,31 @@ const PricingComponent = () => {
         {pricingPlans.map((plan, index) => (
           <div
             key={index}
-           className={`
-                         bg-blue-500/20
-                          p-8
-                          rounded-lg
-                          shadow-sm
-                          border
-                         border-gray-200
-                          transition-all
-                          duration-300
-                          cursor-pointer
-                          hover:-translate-y-3
-                          hover:shadow-2xl
-                          hover:border-indigo-500
-                          hover:scale-[1.02]
+            className={`
+              motion-card
+              bg-blue-500/20
+              p-8
+              rounded-lg
+              shadow-sm
+              border
+              border-slate-700/50
+              cursor-pointer
+              hover:border-indigo-400/50
               ${
-                  plan.highlight
-                  ? "border-indigo-600 relative scale-105"
+                plan.highlight
+                  ? "border-indigo-500/70 relative md:scale-[1.03] shadow-indigo-500/10"
                   : ""
-                }
-              `}
+              }
+            `}
           >
             {plan.highlight && (
               <div className="absolute top-0 right-0 bg-indigo-600 text-white px-3 py-1 text-sm rounded-bl-lg rounded-tr-lg">
                 Popular
               </div>
             )}
-            <h3 className="text-xl font-semibold mb-2 text-gray-300">{plan.title}</h3>
+            <h3 className="text-xl font-semibold mb-2 text-gray-300">
+              {plan.title}
+            </h3>
             <div className="mb-4">
               <span className="text-4xl font-bold text-gray-300">{plan.price}</span>
               <span className="text-gray-500">{plan.duration}</span>
@@ -106,19 +105,15 @@ const PricingComponent = () => {
                 </li>
               ))}
             </ul>
-            <button  className="..." 
-  onClick={() => {
-    navigate(plan.linkto);
-  }}
->
-  <Link 
-  to={plan.linkto} 
-  className={`mt-6 block w-full text-center font-medium py-2.5 px-4 rounded-lg transition-colors ${plan.buttonStyle}`}
->
-  {plan.buttonLabel}
-</Link>
-</button>
-              </div>
+            <button
+              className={`motion-cta mt-6 block w-full text-center font-medium py-2.5 px-4 rounded-lg shadow-lg ${plan.buttonStyle}`}
+              onClick={() => {
+                navigate(plan.linkto);
+              }}
+            >
+              {plan.buttonLabel}
+            </button>
+          </div>
         ))}
       </div>
     </section>

@@ -42,11 +42,11 @@ const FeatureComponent = () => {
               <div
                 key={post._id}
                 onClick={() => navigate(`/post/${post._id}`)}
-                className="h-full bg-blue-500/10 rounded-lg shadow-sm overflow-hidden border border-slate-700/40 cursor-pointer hover:bg-blue-500/20 transition-colors duration-200 flex flex-col group"
+                className="motion-card h-full bg-blue-500/10 rounded-lg shadow-sm overflow-hidden border border-slate-700/40 cursor-pointer hover:bg-blue-500/20 hover:border-blue-400/30 flex flex-col group"
               >
                 <div className="relative overflow-hidden h-48">
                   <img
-                    className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="motion-image h-full w-full object-cover"
                     src={post.imageURL}
                     alt={post.title || "Featured Post"}
                   />
@@ -114,7 +114,7 @@ const FeatureComponent = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                         title="Share on Twitter"
-                        className="hover:text-sky-400 transition-colors duration-200"
+                        className="motion-icon hover:text-sky-400 hover:-translate-y-0.5"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <FaTwitter size={16} />
@@ -125,7 +125,7 @@ const FeatureComponent = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                         title="Share on LinkedIn"
-                        className="hover:text-blue-500 transition-colors duration-200"
+                        className="motion-icon hover:text-blue-500 hover:-translate-y-0.5"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <FaLinkedin size={16} />
@@ -134,7 +134,7 @@ const FeatureComponent = () => {
                       <a
                         href={`mailto:?subject=${encodeURIComponent(post.title || "")}&body=${encodeURIComponent(`${(post.content || "").slice(0, 120)}...\n\nRead more: ${postUrl}`)}`}
                         title="Share via Email"
-                        className="hover:text-red-400 transition-colors duration-200"
+                        className="motion-icon hover:text-red-400 hover:-translate-y-0.5"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <FaEnvelope size={16} />
