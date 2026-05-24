@@ -7,6 +7,17 @@ import { useNavigate } from "react-router-dom";
 
 const CommunitySpotlightComponent = () => {
   const { data, isLoading } = useGetLatestListsQuery(undefined);
+ fix/269-like_button
+  const handleLike = async (postId: string) => {
+  try {
+    console.log("Liked:", postId);
+
+   
+  } catch (error) {
+    console.error(error);
+  }
+};
+
   const navigate = useNavigate();
 
   // Dynamic reading calculation logic
@@ -15,6 +26,7 @@ const CommunitySpotlightComponent = () => {
     const words = content.trim().split(/\s+/).length;
     return Math.max(1, Math.ceil(words / 200));
   };
+ main
 
   if (isLoading) {
     return <LoadingAnimation />;
@@ -81,6 +93,13 @@ const CommunitySpotlightComponent = () => {
                   <span className="flex items-center gap-1">
                     <i className="far fa-eye"></i> {post.viewsCount}
                   </span>
+                  <button 
+                   onClick={() => handleLike(post._id)} 
+                   className="flex items-center gap-1 text-gray-500 hover:text-red-400 transition"
+                  >                       
+                   <i className="far fa-heart"></i>
+                   {post.likesCount}
+                  </button>
                   <span className="flex items-center gap-1">
                     <i className="far fa-heart"></i> {post.likesCount}
                   </span>
