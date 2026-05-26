@@ -4,6 +4,7 @@ import {
   HarmBlockThreshold,
 } from "@google/generative-ai";
 import { fetchImageURL } from "../../../utils/image_generation";
+import { GenerationAbortedError } from "../../../utils/generation_timeout";
 import config from "../../../config";
 import { v4 as uuidv4 } from "uuid";
 import { IAlternateEnding } from "./ai_model.interface";
@@ -42,42 +43,78 @@ interface Story {
   imageURL?: string;
 }
 
+const throwIfAborted = (signal?: AbortSignal): void => {
+  if (signal?.aborted) {
+    throw new GenerationAbortedError();
+  }
+};
+
 export async function generateWithGeminiStories(
   prompt: string,
   wordLength: number = 250,
-  numStories: number = 2
+  numStories: number = 2,
+  signal?: AbortSignal
 ): Promise<Story[]> {
+  throwIfAborted(signal);
+
   try {
     const chatSession = model.startChat({
       generationConfig,
       safetySettings,
       history: [],
     });
+
     const response = await chatSession.sendMessage(
       `Generate ${numStories} different short stories based on the following prompt: "${prompt}".
         Each story should be in JSON format with fields: "title", "content", and "tag".
         Ensure each story is approximately ${wordLength} words long.
         Return the output as a JSON array.`
     );
+
+    throwIfAborted(signal);
+
     const text = response.response.text();
-    const stories = JSON.parse(text);
-    if (!Array.isArray(stories)) {
+    let stories: Story[];
+
+    try {
+      stories = JSON.parse(text);
+    } catch (parseError: unknown) {
+      const parseErrorMsg = parseError instanceof Error ? parseError.message : String(parseError);
       throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        "Invalid AI response format"
+        httpStatus.INTERNAL_SERVER_ERROR,
+        `Gemini returned invalid JSON for story generation: ${parseErrorMsg}`
       );
     }
-    const imagePromises = stories.map((story) => fetchImageURL(story.tag));
-    const imageResults = await Promise.all(imagePromises);
+
+    if (!Array.isArray(stories) || stories.length === 0) {
+      throw new ApiError(
+        httpStatus.INTERNAL_SERVER_ERROR,
+        "Gemini returned no stories or invalid story structure"
+      );
+    }
+
+    const imageResults = await Promise.all(
+      stories.map(async (story) => {
+        throwIfAborted(signal);
+        return fetchImageURL(story.tag);
+      })
+    );
+
+    throwIfAborted(signal);
+
     return stories.map((story, index) => ({
       ...story,
       imageURL: imageResults[index].imageUrl,
       uuid: uuidv4(),
     }));
-  } catch (error: any) {
+  } catch (error: unknown) {
+    if (error instanceof ApiError || error instanceof GenerationAbortedError) {
+      throw error;
+    }
+    const errorMsg = error instanceof Error ? error.message : String(error);
     throw new ApiError(
       httpStatus.INTERNAL_SERVER_ERROR,
-      `AI generation failed: ${error?.message || error}`
+      `AI generation failed: ${errorMsg}`
     );
   }
 }
@@ -114,19 +151,50 @@ export async function generateAlternateEndingsWithGemini(
       Return the output as a JSON array of objects with the fields: "style", "ending", and "fullStory".`
     );
     const text = response.response.text();
-    const parsed = JSON.parse(text);
-    if (!Array.isArray(parsed)) {
+    
+    let parsed: any;
+    try {
+      parsed = JSON.parse(text);
+    } catch (parseError: unknown) {
+      const parseErrorMsg = parseError instanceof Error ? parseError.message : String(parseError);
       throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        "Invalid AI response format"
+        httpStatus.INTERNAL_SERVER_ERROR,
+        `Gemini returned invalid JSON for alternate endings: ${parseErrorMsg}`
       );
     }
+
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        "Invalid AI response: Expected a non-empty JSON array."
+      );
+    }
+
+    const isValid = parsed.every(
+      (item) =>
+        item &&
+        typeof item === "object" &&
+        typeof item.style === "string" &&
+        typeof item.ending === "string" &&
+        typeof item.fullStory === "string"
+    );
+
+    if (!isValid) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        "Invalid AI response: Alternate endings are malformed."
+      );
+    }
+
     return parsed;
-  } catch (error: any) {
+  } catch (error: unknown) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    const errorMsg = error instanceof Error ? error.message : String(error);
     throw new ApiError(
       httpStatus.INTERNAL_SERVER_ERROR,
-      `AI generation of alternate endings failed: ${error?.message || error}`
+      `AI generation of alternate endings failed: ${errorMsg}`
     );
   }
 }
-
