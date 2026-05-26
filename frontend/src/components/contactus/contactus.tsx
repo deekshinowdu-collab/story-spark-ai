@@ -97,9 +97,13 @@ export default function Contact() {
       } else {
         setError("✕ Failed to send message. Please try again.");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Contact Form Error:", err);
-      setError(err.message || "✕ Failed to send message. Please check your connection.");
+      const message =
+        err instanceof Error
+          ? err.message
+          : "✕ Failed to send message. Please check your connection.";
+      setError(message);
     } finally {
       // 4. Release BOTH the lock and the loading state in all scenarios
       setLoading(false);
@@ -133,7 +137,7 @@ export default function Contact() {
         </div>
 
         {/* Form Container */}
-        <div className="w-full max-w-lg group relative">
+          <div className="w-full max-w-xl mx-auto group relative">
           <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-[1.5rem] blur opacity-10 group-hover:opacity-15 transition duration-1000"></div>
 
           <form
