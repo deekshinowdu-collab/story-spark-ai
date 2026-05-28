@@ -1154,7 +1154,7 @@ if (isLoading) {
                 <img
                   src={selectedStory.imageURL}
                   alt="card-image"
-                  className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="w-full h-48 object-cover"
                 />
               </div>
               <div className="px-3 py-1">
