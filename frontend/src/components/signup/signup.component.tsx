@@ -330,6 +330,7 @@ const SignUpComponent = () => {
                 error={errors.password}
               />
 
+              {password?.length > 0 && (
               <div className="space-y-3 -mt-2">
                 <div
                   className="w-full h-2 bg-slate-700 rounded-full overflow-hidden"
@@ -367,6 +368,7 @@ const SignUpComponent = () => {
                   })}
                 </ul>
               </div>
+)}
 
               <SSInput
                 label="Confirm Password"
@@ -391,6 +393,22 @@ const SignUpComponent = () => {
                 required={true}
                 icon="fas fa-key"
                 register={register}
+                validation={{
+                  required: "Please enter OTP",
+                  minLength: {
+                    value: 6,
+                    message: "OTP must be 6 digits",
+                  },
+                  maxLength: {
+                    value: 6,
+                    message: "OTP must be 6 digits",
+                  },
+                  pattern: {
+                    value: /^[0-9]{6}$/,
+                    message: "OTP must contain only numbers",
+                  },
+                }}
+                error={errors.otp}
               />
 
               <SSButton
