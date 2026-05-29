@@ -54,10 +54,13 @@ export const ProfileSettingComponent = ({ user, onSave, loading }: ProfileSettin
     });
   };
 
+  const inputClassName =
+    "w-full px-4 py-2 border border-slate-350 rounded-lg bg-white text-slate-800 dark:bg-slate-900/70 dark:text-gray-100 dark:border-slate-700/50 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition";
+
   return (
-    <div className="min-h-screen  py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
-        <div className="bg-blue-500/10 rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-slate-50 border border-slate-200 dark:bg-white/[0.02] dark:border-white/[0.06] rounded-xl shadow-lg overflow-hidden">
           <div className="bg-indigo-600 px-6 py-4">
             <h2 className="text-2xl font-bold text-white">User Settings</h2>
             <p className="text-indigo-200 mt-1">
@@ -68,7 +71,7 @@ export const ProfileSettingComponent = ({ user, onSave, loading }: ProfileSettin
           <div className="p-6 md:p-8">
             <form onSubmit={handleSubmit}>
               <div className="mb-8">
-                <h3 className="text-lg font-semibold text-gray-300 mb-4 border-b pb-2">
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-gray-300 mb-4 border-b border-slate-200 dark:border-slate-750 pb-2">
                   Basic Information
                 </h3>
 
@@ -76,7 +79,7 @@ export const ProfileSettingComponent = ({ user, onSave, loading }: ProfileSettin
                   <div>
                     <label
                       htmlFor="name"
-                      className="block text-sm font-medium text-gray-400 mb-1"
+                      className="block text-sm font-medium text-slate-600 dark:text-gray-400 mb-1"
                     >
                       Full Name
                     </label>
@@ -86,14 +89,14 @@ export const ProfileSettingComponent = ({ user, onSave, loading }: ProfileSettin
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                      className={inputClassName}
                     />
                   </div>
 
                   <div>
                     <label
                       htmlFor="email"
-                      className="block text-sm font-medium text-gray-400 mb-1"
+                      className="block text-sm font-medium text-slate-600 dark:text-gray-400 mb-1"
                     >
                       Email Address
                     </label>
@@ -103,41 +106,15 @@ export const ProfileSettingComponent = ({ user, onSave, loading }: ProfileSettin
                       name="email"
                       value={user.email}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition cursor-not-allowed"
+                      className={`${inputClassName} cursor-not-allowed`}
                       disabled={true}
                     />
                   </div>
 
                   <div className="md:col-span-2">
                     <label
-                      htmlFor="avatar"
-                      className="block text-sm font-medium text-gray-400 mb-1"
-                    >
-                      Avatar URL
-                    </label>
-                    <input
-                      type="url"
-                      id="avatar"
-                      name="avatar"
-                      value={formData.avatar}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
-                    />
-                    {formData.avatar && (
-                      <div className="mt-2">
-                        <img
-                          src={formData.avatar}
-                          alt="Profile preview"
-                          className="h-16 w-16 rounded-full object-cover"
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label
                       htmlFor="bio"
-                      className="block text-sm font-medium text-gray-400 mb-1"
+                      className="block text-sm font-medium text-slate-600 dark:text-gray-400 mb-1"
                     >
                       Bio
                     </label>
@@ -147,14 +124,14 @@ export const ProfileSettingComponent = ({ user, onSave, loading }: ProfileSettin
                       rows={3}
                       value={formData.bio}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                      className={`${inputClassName} min-h-[96px]`}
                     />
                   </div>
                 </div>
               </div>
 
               <div className="mb-8">
-                <h3 className="text-lg font-semibold text-gray-300 mb-4 border-b pb-2">
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-gray-300 mb-4 border-b border-slate-200 dark:border-slate-750 pb-2">
                   Social Links
                 </h3>
 
@@ -162,7 +139,7 @@ export const ProfileSettingComponent = ({ user, onSave, loading }: ProfileSettin
                   <div>
                     <label
                       htmlFor="facebook"
-                      className="block text-sm font-medium text-gray-400 mb-1 flex items-center"
+                      className="block text-sm font-medium text-slate-600 dark:text-gray-400 mb-1 flex items-center"
                     >
                       <svg
                         className="w-5 h-5 mr-2 text-blue-600"
@@ -179,7 +156,7 @@ export const ProfileSettingComponent = ({ user, onSave, loading }: ProfileSettin
                       name="social.facebook"
                       value={formData.social.facebook}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                      className={inputClassName}
                       placeholder="https://facebook.com/username"
                     />
                   </div>
@@ -187,7 +164,7 @@ export const ProfileSettingComponent = ({ user, onSave, loading }: ProfileSettin
                   <div>
                     <label
                       htmlFor="twitter"
-                      className="block text-sm font-medium text-gray-400 mb-1 flex items-center"
+                      className="block text-sm font-medium text-slate-600 dark:text-gray-400 mb-1 flex items-center"
                     >
                       <svg
                         className="w-5 h-5 mr-2 text-blue-400"
@@ -204,7 +181,7 @@ export const ProfileSettingComponent = ({ user, onSave, loading }: ProfileSettin
                       name="social.twitter"
                       value={formData.social.twitter}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition"
+                      className={inputClassName}
                       placeholder="https://twitter.com/username"
                     />
                   </div>
@@ -212,7 +189,7 @@ export const ProfileSettingComponent = ({ user, onSave, loading }: ProfileSettin
                   <div>
                     <label
                       htmlFor="linkedin"
-                      className="block text-sm font-medium text-gray-400 mb-1 flex items-center"
+                      className="block text-sm font-medium text-slate-600 dark:text-gray-400 mb-1 flex items-center"
                     >
                       <svg
                         className="w-5 h-5 mr-2 text-blue-700"
@@ -229,7 +206,7 @@ export const ProfileSettingComponent = ({ user, onSave, loading }: ProfileSettin
                       name="social.linkedin"
                       value={formData.social.linkedin}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-700 focus:border-blue-700 transition"
+                      className={inputClassName}
                       placeholder="https://linkedin.com/in/username"
                     />
                   </div>
@@ -237,7 +214,7 @@ export const ProfileSettingComponent = ({ user, onSave, loading }: ProfileSettin
                   <div>
                     <label
                       htmlFor="instagram"
-                      className="block text-sm font-medium text-gray-400 mb-1 flex items-center"
+                      className="block text-sm font-medium text-slate-600 dark:text-gray-400 mb-1 flex items-center"
                     >
                       <svg
                         className="w-5 h-5 mr-2 text-pink-600"
@@ -254,7 +231,7 @@ export const ProfileSettingComponent = ({ user, onSave, loading }: ProfileSettin
                       name="social.instagram"
                       value={formData.social.instagram}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition"
+                      className={inputClassName}
                       placeholder="https://instagram.com/username"
                     />
                   </div>
@@ -262,48 +239,48 @@ export const ProfileSettingComponent = ({ user, onSave, loading }: ProfileSettin
               </div>
 
               <div className="mb-8">
-                <h3 className="text-lg font-semibold text-gray-300 mb-4 border-b pb-2">
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-gray-300 mb-4 border-b border-slate-200 dark:border-slate-750 pb-2">
                   Account Status
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-50">
-                    <p className="text-sm font-medium text-blue-800">Role</p>
-                    <p className="text-lg font-semibold text-blue-900 capitalize">
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 dark:bg-blue-950/20 dark:border-blue-900/30">
+                    <p className="text-sm font-medium text-blue-700 dark:text-blue-400">Role</p>
+                    <p className="text-lg font-semibold text-blue-900 dark:text-blue-300 capitalize">
                       {user.role}
                     </p>
                   </div>
 
-                  <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
-                    <p className="text-sm font-medium text-purple-800">
+                  <div className="bg-purple-50 p-4 rounded-lg border border-purple-100 dark:bg-purple-950/20 dark:border-purple-900/30">
+                    <p className="text-sm font-medium text-purple-700 dark:text-purple-400">
                       Status
                     </p>
-                    <p className="text-lg font-semibold text-purple-900 capitalize">
+                    <p className="text-lg font-semibold text-purple-900 dark:text-purple-300 capitalize">
                       {user.status}
                     </p>
                   </div>
 
-                  <div className="bg-green-50 p-4 rounded-lg border border-green-100">
-                    <p className="text-sm font-medium text-green-800">
+                  <div className="bg-green-50 p-4 rounded-lg border border-green-100 dark:bg-emerald-950/20 dark:border-emerald-900/30">
+                    <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
                       Subscription
                     </p>
-                    <p className="text-lg font-semibold text-green-900 capitalize">
+                    <p className="text-lg font-semibold text-emerald-900 dark:text-emerald-300 capitalize">
                       {user.subscriptionType}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-4 pt-6 border-t">
+              <div className="flex justify-end space-x-4 pt-6 border-t border-slate-200 dark:border-slate-700/50">
                 <button
                   type="button"
-                  className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition"
+                  className="px-6 py-2 border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-slate-100 dark:border-slate-700/50 dark:text-slate-300 dark:hover:bg-slate-800 transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-indigo-600 rounded-lg text-white font-medium hover:bg-indigo-700 transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                  className="px-6 py-2 bg-indigo-600 rounded-lg text-white font-medium hover:bg-indigo-700 transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
                 >
                   {loading ? "Saving..." : "Save Changes"}
                 </button>
