@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { isLoggedIn, removeUserInfo, getUserInfo } from "../../services/auth.service";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { USER_ROLE } from "../../constants/role";
@@ -21,7 +21,7 @@ const NavListComponent: React.FC = () => {
   const getMobileLinkClass = (isActive: boolean) =>
     `flex min-h-12 items-center justify-start gap-2 rounded-xl border px-4 py-2.5 text-base font-semibold leading-tight transition-all duration-300 ${
       isActive
-        ? "bg-custom/15 text-slate-900 dark:text-white border-custom/40 shadow-[0_0_15px_rgba(59,130,246,0.2)]"
+        ? "bg-custom/15 text-slate-900 dark:text-white border-custom/40 shadow-[0_0_15px_rgba(59,130,246,0.25)]"
         : "text-slate-600 dark:text-slate-400 border-transparent hover:bg-slate-200/60 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white"
     }`;
 
@@ -87,7 +87,7 @@ const NavListComponent: React.FC = () => {
             </Link>
           </div>
 
-          {/* Desktop Navigation Links ΓÇö visible only at xl+ */}
+          {/* Desktop Navigation Links — visible only at xl+ */}
           <nav className="hidden xl:flex flex-1 items-center justify-center gap-1 px-2">
             <NavLink to="/" end className={({ isActive }) => getLinkClass(isActive)}>
               {({ isActive }) => (
@@ -179,7 +179,7 @@ const NavListComponent: React.FC = () => {
           {/* Right-side actions */}
           <div className="flex items-center gap-2 shrink-0">
 
-            {/* Desktop actions ΓÇö xl+ */}
+            {/* Desktop actions — xl+ */}
             <div className="hidden xl:flex items-center gap-1.5">
               <button
                 type="button"
@@ -229,7 +229,7 @@ const NavListComponent: React.FC = () => {
               </div>
             </div>
 
-            {/* Mobile/Tablet actions ΓÇö below xl */}
+            {/* Mobile/Tablet actions — below xl */}
             <div className="flex xl:hidden items-center gap-1.5">
               <ThemeToggle />
               <div className="relative inline-flex" ref={notificationMenuRef}>
