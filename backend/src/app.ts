@@ -1,4 +1,5 @@
 import helmet from "helmet";
+import compression from "compression";
 import rateLimit from "express-rate-limit";
 import express, { Application, NextFunction, Request, Response } from "express";
 import cors from "cors";
@@ -8,12 +9,17 @@ import cookieParser from "cookie-parser";
 import config from "./config";
 import { Routers } from "./router";
 import globalErrorHandler from "./app/middleware/global.error.handler";
+import requestId from "./app/middleware/request.id";
+import httpLogger from "./app/middleware/http.logger";
 import { User } from "./app/modules/user/user.model";
 import { NewsletterSubscriber } from "./app/modules/newsletter/newsletter.model";
 
 const app: Application = express();
 app.set("trust proxy", 1); // Trust first proxy to securely read req.ip
 app.use(helmet());
+app.use(requestId);
+app.use(httpLogger);
+app.use(compression());
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
