@@ -1,6 +1,6 @@
 import { AUTH_KEY } from "../constants/storage-key";
 import { AccessToken } from "../models/login";
-import { decodedToken } from "../utils/jwt";
+import { decodedToken, CustomJwtPayload } from "../utils/jwt";
 import {
   getFromLocalStorage,
   removeFromLocalStorage,
@@ -26,7 +26,9 @@ export type AuthUserInfo = {
   avatar?: string;
 };
 
-const buildUserInfo = (decodedData: any): AuthUserInfo => ({
+type DecodedAuthPayload = CustomJwtPayload & { _id?: string; avatar?: string };
+
+const buildUserInfo = (decodedData: DecodedAuthPayload): AuthUserInfo => ({
   email: decodedData?.email || "",
   userId: decodedData?.userId || decodedData?._id || "",
   name: decodedData?.name || "",
