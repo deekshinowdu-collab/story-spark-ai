@@ -1,7 +1,12 @@
-import express, { Application, NextFunction, Request, Response, RequestHandler } from "express";
+import express, {
+  Application,
+  NextFunction,
+  Request,
+  Response,
+  RequestHandler,
+} from "express";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-import express, { Application, NextFunction, Request, Response } from "express";
 import cors from "cors";
 import httpStatus from "http-status";
 import cron from "node-cron";
@@ -10,10 +15,8 @@ import config from "./config";
 import { Routers } from "./router";
 import globalErrorHandler from "./app/middleware/global.error.handler";
 import { User } from "./app/modules/user/user.model";
-import { NewsletterSubscriber } from "./app/modules/newsletter/newsletter.model";
 import storyRoutes from "./routes/story.routes";
 
-const app: Application = express();
 
 const app: Application = express();
 app.set("trust proxy", 1); // Trust first proxy to securely read req.ip
@@ -24,7 +27,7 @@ const limiter = rateLimit({
   message: "Too many requests, please try again later."
 });
 
-app.use(limiter as any);
+app.use(limiter as RequestHandler);
 
 
 
@@ -58,11 +61,6 @@ app.use(
 // ✅ FIX: BODY PARSERS MUST COME BEFORE ROUTES
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // Keeps your extended payload parsing enabled
-app.use(cookieParser() as any);
-
-
 app.use(cookieParser() as unknown as RequestHandler);
 
 // ── ROUTES ──
