@@ -12,7 +12,8 @@ import {
 } from "./story_visualizer.interface";
 import { generateStoryboardImage } from "../../../utils/storyboard_image_generation";
 
-const STORYBOARD_GENERATION_TIMEOUT_MS = 60000;
+const STORY_VISUALIZER_TIMEOUT_MS = 90000;
+const MAX_IMAGES_PER_STORYBOARD = 2;
 
 const mapStoryVisualizerError = (error: unknown): never => {
   if (error instanceof ApiError) {
@@ -53,7 +54,17 @@ const attachSceneImages = async (
 ): Promise<IStoryboardScene[]> => {
   const scenesWithImages: IStoryboardScene[] = [];
 
-  for (const scene of scenes) {
+  for (let index = 0; index < scenes.length; index += 1) {
+    const scene = scenes[index];
+
+    if (index >= MAX_IMAGES_PER_STORYBOARD) {
+      scenesWithImages.push({
+        ...scene,
+        imageStatus: "pending",
+      });
+      continue;
+    }
+
     try {
       const imageUrl = await generateStoryboardImage(
         buildStoryboardImagePrompt(styleGuide, scene.imagePrompt)
@@ -87,7 +98,7 @@ const generateStoryboard = async (
           ...payload,
           language,
         }),
-      STORYBOARD_GENERATION_TIMEOUT_MS
+      STORY_VISUALIZER_TIMEOUT_MS
     );
 
     const scenes = await attachSceneImages(
