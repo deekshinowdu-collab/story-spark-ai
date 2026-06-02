@@ -262,6 +262,8 @@ const StoriesComponent = () => {
   }, []);
 
   // Autosave draft
+  // ensure selectedTone state exists (previously an invalid anonymous useState)
+  const [selectedTone, setSelectedTone] = useState<string>(draft?.tone || "");
   useEffect(() => {
     const timer = setTimeout(() => {
       const draftData = {
@@ -274,7 +276,7 @@ const StoriesComponent = () => {
       localStorage.setItem("story_spark_draft", JSON.stringify(draftData));
     }, 1000);
     return () => clearTimeout(timer);
-  }, [textareaValue, selectedGenre, selectedLength, selectedLanguage, stories]);
+  }, [textareaValue, selectedGenre, selectedLength, selectedLanguage, selectedTone, stories]);
 
   // Sync language preference
   useEffect(() => {
@@ -313,9 +315,13 @@ const StoriesComponent = () => {
   useEffect(() => {
     if (location.state?.prompt) {
       setTextareaValue(location.state.prompt);
-      navigate(location.pathname, { replace: true, state: {} });
+      setSelectedGenre(location.state.genre || "");
+      navigate(location.pathname, {
+        replace: true,
+        state: {},
+      });
     }
-  }, [location, navigate]);
+  }, [location, navigate, setSelectedGenre, setTextareaValue]);
 
   useEffect(() => {
     setValue("prompt", textareaValue);

@@ -595,14 +595,20 @@ const StoriesViewComponent: React.FC<StoriesComponentProps> = ({
     setTopics(updated);
   };
 
-  const handleCopyStory = async () => {
+  const handleDeleteTopic = (index: number) => {
+    setTopics((currentTopics) =>
+      currentTopics.filter((_, topicIndex) => topicIndex !== index)
+    );
+  };
+
+  async function handleCopyStory() {
     if (selectedStory?.content) {
       await navigator.clipboard.writeText(selectedStory.content);
       setIsCopied(true);
       toast.success("Story copied!");
       setTimeout(() => setIsCopied(false), 2000);
     }
-  };
+  }
 
   const handelPublishStory = async () => {
     if (!isLogin) { toast.error("Please login to publish the story."); return; }
