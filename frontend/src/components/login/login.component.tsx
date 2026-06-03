@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { Link } from "react-router-dom";
-import { useState } from "react";
 import SSInput from "../ui-component/ss-input/ss-input";
 import SSButton from "../ui-component/ss-button/ss-button";
-import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   useLoginUserMutation,
@@ -15,7 +13,7 @@ import { USER_ROLE } from "../../constants/role";
 import RedirectComponent from "../redirect.component";
 import toast, { Toaster } from "react-hot-toast";
 import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
-import { WandSparkles, BookOpen, UsersRound } from "lucide-react";
+import { WandSparkles } from "lucide-react";
 
 type Inputs = {
   email: string;
@@ -108,40 +106,18 @@ const LoginComponent = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="flex w-full max-w-md flex-col justify-center py-12 relative z-10 px-4"
+        className="flex w-full max-w-md flex-col justify-center py-12 relative z-10 px-4 items-center gap-6"
       >
-
-          <div className="flex justify-center items-center gap-6 border border-gray-300 rounded-2xl p-4 bg-slate-50 dark:bg-slate-800 dark:text-gray-400">
-            <WandSparkles className="text-violet-600 shrink-0" />
-            <div>
-              <h2 className="font-bold">Smart writing</h2>
-              <p>AI that understands your ideas</p>
-            </div>
-          </div>
-
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="bg-slate-50 dark:bg-slate-800/60 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 sm:p-8 shadow-2xl w-full min-w-0 overflow-hidden"
-        >
-
-            <button
-            onClick={() => window.location.href = "/"}
-            className="mb-4 text-sm text-blue-400 hover:text-blue-300 transition-colors duration-200 flex items-center gap-2 cursor-pointer"
-                      >
-            ← Back to Home
-            </button>
-
-          <div className="border border-gray-300 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 dark:text-gray-400 text-sm">
-            Create, edit, and generate engaging multiple story variations from a
-            single prompt. Perfect for writers, creators, and enthusiasts
-            exploring the future of fiction.
+        <div className="flex w-full justify-center items-center gap-6 border border-gray-300 dark:border-slate-700 rounded-2xl p-4 bg-slate-50 dark:bg-slate-800/60 dark:text-gray-400">
+          <WandSparkles className="text-violet-600 shrink-0" />
+          <div>
+            <h2 className="font-bold text-slate-900 dark:text-white">Smart writing</h2>
+            <p className="text-xs">AI that understands your ideas</p>
           </div>
         </div>
 
-        {/* Right side — login form card */}
-        <div className="w-full max-w-md bg-slate-50 dark:bg-slate-800/60 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 rounded-2xl p-8 sm:p-10 shadow-2xl">
+        {/* Login form card container */}
+        <div className="w-full bg-slate-50 dark:bg-slate-800/60 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 sm:p-8 shadow-2xl overflow-hidden">
           {/* Back to Home */}
           <button
             onClick={() => (window.location.href = "/")}
@@ -171,7 +147,7 @@ const LoginComponent = () => {
               validation={{ required: "Email is required" }}
               error={errors.email}
               autoComplete="email"
-              />
+            />
 
             <div>
               <SSInput
@@ -206,13 +182,13 @@ const LoginComponent = () => {
               <div className="w-full border-t border-slate-200 dark:border-slate-800" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white dark:bg-slate-900 px-4 text-slate-400 dark:text-slate-500 font-semibold tracking-wide">
+              <span className="bg-slate-50 dark:bg-[#151f32] px-4 text-slate-400 dark:text-slate-500 font-semibold tracking-wide">
                 Or
               </span>
             </div>
           </div>
 
-          {/* Social Identity OAuth Block Container */}
+          {/* Social Identity OAuth Container */}
           <div className="flex justify-center list-none w-full box-border">
             <GoogleLogin
               onSuccess={handleGoogleLoginSuccess}
@@ -230,8 +206,7 @@ const LoginComponent = () => {
             </Link>
           </p>
         </div>
-
-      </div>
+      </motion.div>
 
       <Toaster position="top-right" reverseOrder={false} />
     </div>
