@@ -5,12 +5,18 @@ import {
   User,
   FileText,
   Pencil,
+  Send,
+  GitBranch,
   Sparkles,
+  AlertCircle,
+  ArrowUpRight,
+  Zap,
 } from "lucide-react";
 
-import { instance as axios } from "../../helpers/axios/axionInstance";
+import { instance as axios } from "../../helpers/axios/axiosInstance";
 import { getBaseUrl } from "../../helpers/config";
 import storybook from "../../assets/storybook.png";
+import { motion } from "framer-motion";
 
 type FormData = {
   fullname: string;
@@ -28,51 +34,87 @@ const INITIAL_FORM_DATA: FormData = {
   message: "",
 };
 
+const CONTACT_CHANNELS = [
+  {
+    icon: Mail,
+    label: "Email us",
+    value: "ronichandrasarkar@gmail.com",
+    href: "mailto:ronichandrasarkar@gmail.com",
+    color: "from-blue-500/10 to-cyan-500/10",
+    iconColor: "text-blue-500 dark:text-blue-400",
+    hoverBorder: "hover:border-blue-500/30",
+  },
+  {
+    icon: GitBranch,
+    label: "GitHub",
+    value: "ronisarkarexe/story-spark-ai",
+    href: "https://github.com/ronisarkarexe/story-spark-ai",
+    color: "from-purple-500/10 to-violet-500/10",
+    iconColor: "text-purple-500 dark:text-purple-400",
+    hoverBorder: "hover:border-purple-500/30",
+  },
+];
+
+const FORM_FIELDS = [
+  {
+    id: "contact-fullname",
+    name: "fullname" as FormField,
+    type: "text",
+    label: "Full Name",
+    placeholder: "Jane Smith",
+    icon: User,
+    autoComplete: "name",
+  },
+  {
+    id: "contact-email",
+    name: "email" as FormField,
+    type: "email",
+    label: "Email Address",
+    placeholder: "jane@example.com",
+    icon: Mail,
+    autoComplete: "email",
+  },
+  {
+    id: "contact-subject",
+    name: "subject" as FormField,
+    type: "text",
+    label: "Subject",
+    placeholder: "What's this about?",
+    icon: FileText,
+    autoComplete: "off",
+  },
+];
+
 export default function Contact() {
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM_DATA);
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
-
   const isSubmittingRef = useRef(false);
 
   const changeHandler = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ): void => {
     const fieldName = e.target.name as FormField;
-    const value = e.target.value;
-
-    setFormData((prev) => ({
-      ...prev,
-      [fieldName]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [fieldName]: e.target.value }));
+    if (error) setError("");
   };
 
   const validateForm = (): boolean => {
-    const trimmedData = {
+    const t = {
       fullname: formData.fullname.trim(),
       email: formData.email.trim(),
       subject: formData.subject.trim(),
       message: formData.message.trim(),
     };
-
-    if (
-      !trimmedData.fullname ||
-      !trimmedData.email ||
-      !trimmedData.subject ||
-      !trimmedData.message
-    ) {
+    if (!t.fullname || !t.email || !t.subject || !t.message) {
       setError("All fields are required.");
       return false;
     }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-
-    if (!emailRegex.test(trimmedData.email)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(t.email)) {
       setError("Please enter a valid email address.");
       return false;
     }
-
     return true;
   };
 
@@ -80,43 +122,32 @@ export default function Contact() {
     e: FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     e.preventDefault();
-
     if (isSubmittingRef.current) return;
     isSubmittingRef.current = true;
-
     try {
       setError("");
       setSuccess(false);
-
       if (!validateForm()) return;
-
       setLoading(true);
-
       const response = await axios.post(`${getBaseUrl()}/contact`, {
         fullname: formData.fullname.trim(),
         email: formData.email.trim(),
         subject: formData.subject.trim(),
         message: formData.message.trim(),
       });
-
-      if (response && response.data?.success) {
+      if (response?.data?.success) {
         setSuccess(true);
         setFormData(INITIAL_FORM_DATA);
       } else {
-        setError("✕ Failed to send message. Please try again.");
+        setError("Failed to send message. Please try again.");
       }
     } catch (err: unknown) {
       console.error("Contact Form Error:", err);
-
-
-
-
-      const message =
+      setError(
         err instanceof Error
           ? err.message
-          : "✕ Failed to send message. Please check your connection.";
-      setError(message);
-
+          : "Failed to send message. Please check your connection.",
+      );
     } finally {
       setLoading(false);
       isSubmittingRef.current = false;
@@ -126,134 +157,252 @@ export default function Contact() {
   return (
     <section
       id="contact"
-      className="relative min-h-screen overflow-hidden bg-[#020617] px-4 py-20 text-white sm:px-6 lg:px-16"
+      aria-labelledby="contact-heading"
+      className="relative overflow-hidden bg-slate-50 text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100 w-full box-border"
     >
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.15),transparent_30%),radial-gradient(circle_at_bottom_right,_rgba(168,85,247,0.18),transparent_30%)]" />
-      <div className="absolute top-20 left-10 h-72 w-72 rounded-full bg-blue-500/10 blur-[120px]" />
-      <div className="absolute bottom-10 right-10 h-80 w-80 rounded-full bg-purple-500/10 blur-[140px]" />
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/5 rounded-full blur-[120px] pointer-events-none select-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-purple-600/5 rounded-full blur-[120px] pointer-events-none select-none" />
 
-      <div className="relative z-10 mx-auto grid w-full max-w-7xl items-center gap-14 lg:grid-cols-2">
-        {/* Left */}
-        <div>
-          <p className="mb-6 text-sm font-semibold uppercase tracking-[8px] text-blue-400">
-            GET IN TOUCH
-          </p>
-          <h2 className="text-5xl font-black leading-[0.95] sm:text-6xl lg:text-7xl">
-            Contact{" "}
-            <span className="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-              Us
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 box-border">
+        
+        <div className="mb-8 flex flex-col items-center text-center lg:hidden select-none">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/10 dark:border-white/10 bg-blue-500/5 text-blue-600 dark:text-blue-400 px-4 py-1.5 text-xs font-bold uppercase tracking-wider">
+            <Zap className="h-3 w-3" aria-hidden="true" />
+            Get in Touch
+          </span>
+        </div>
+
+        <motion.div className="grid items-start gap-10 lg:grid-cols-[1fr_1.1fr] lg:gap-12 xl:gap-16 w-full box-border">
+
+          <div className="flex flex-col w-full box-border text-left">
+            <span className="mb-6 hidden w-fit items-center gap-1.5 rounded-full border border-blue-500/10 dark:border-white/10 bg-blue-500/5 text-blue-600 dark:text-blue-400 px-4 py-1.5 text-xs font-bold uppercase tracking-wider lg:inline-flex select-none">
+              <Zap className="h-3 w-3" aria-hidden="true" />
+              Get in Touch
             </span>
-          </h2>
-          <div className="mt-6 h-1 w-28 rounded-full bg-yellow-400" />
 
-          <p className="mt-8 max-w-xl text-lg leading-9 text-slate-300">
-            Have a story idea, suggestion, or just want to say hello? We’d love to
-            hear from you.
-          </p>
-
-          <div className="relative mt-14 hidden items-center justify-start lg:flex">
-            <img
-              src={storybook}
-              alt="storybook"
-              className="w-full max-w-[420px] object-contain drop-shadow-[0_0_80px_rgba(139,92,246,0.45)]"
-            />
-            <div className="absolute -left-10 -bottom-10 h-52 w-52 rounded-full bg-purple-500/20 blur-[120px]" />
-          </div>
-        </div>
-
-        {/* Form */}
-        <div className="relative w-full max-w-xl">
-          <div className="absolute -inset-0.5 rounded-[2rem] bg-gradient-to-r from-blue-500 to-purple-600 blur opacity-10 transition duration-1000" />
-
-          <form
-            onSubmit={submitHandler}
-            className="relative space-y-6 rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 backdrop-blur-2xl sm:p-8 lg:p-10"
-          >
-            <div className="relative">
-              <User className="absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-purple-300" />
-              <input
-                type="text"
-                name="fullname"
-                placeholder="Your Name"
-                value={formData.fullname}
-                onChange={changeHandler}
-                required
-                className="h-16 w-full rounded-2xl border border-white/10 bg-[#0b1120]/80 pl-14 pr-5 text-base text-white placeholder:text-slate-400 outline-none transition-all duration-300 focus:border-purple-400 focus:ring-2 focus:ring-purple-500/30"
-              />
-            </div>
-
-            <div className="relative">
-              <Mail className="absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-purple-300" />
-              <input
-                type="email"
-                name="email"
-                placeholder="Your Email"
-                value={formData.email}
-                onChange={changeHandler}
-                required
-                className="h-16 w-full rounded-2xl border border-white/10 bg-[#0b1120]/80 pl-14 pr-5 text-base text-white placeholder:text-slate-400 outline-none transition-all duration-300 focus:border-purple-400 focus:ring-2 focus:ring-purple-500/30"
-              />
-            </div>
-
-            <div className="relative">
-              <FileText className="absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-purple-300" />
-              <input
-                type="text"
-                name="subject"
-                placeholder="Subject"
-                value={formData.subject}
-                onChange={changeHandler}
-                required
-                className="h-16 w-full rounded-2xl border border-white/10 bg-[#0b1120]/80 pl-14 pr-5 text-base text-white placeholder:text-slate-400 outline-none transition-all duration-300 focus:border-purple-400 focus:ring-2 focus:ring-purple-500/30"
-              />
-            </div>
-
-            <div className="relative">
-              <Pencil className="absolute left-5 top-7 h-5 w-5 text-purple-300" />
-              <textarea
-                rows={7}
-                name="message"
-                placeholder="Your Message"
-                value={formData.message}
-                onChange={changeHandler}
-                required
-                className="w-full resize-none rounded-2xl border border-white/10 bg-[#0b1120]/80 pl-14 pr-5 pt-6 text-base text-white placeholder:text-slate-400 outline-none transition-all duration-300 focus:border-purple-400 focus:ring-2 focus:ring-purple-500/30"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex h-16 w-full items-center justify-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 text-lg font-bold text-white transition-all duration-300 hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
+            <h1
+              id="contact-heading"
+              className="font-extrabold tracking-tight text-slate-900 dark:text-white text-3xl sm:text-5xl lg:text-6xl leading-tight"
             >
-              {loading ? (
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-              ) : (
-                <>
-                  <Sparkles className="h-5 w-5" />
-                  <span>Send Message</span>
-                </>
-              )}
-            </button>
+              Let's Start a <br />
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400">
+                Conversation
+              </span>
+            </h1>
 
-            {success && (
-              <div className="rounded-2xl border border-green-500/30 bg-green-500/10 px-4 py-4">
-                <p className="text-center text-sm font-medium text-green-400 sm:text-base">
-                  ✓ Message sent successfully. I’ll get back to you soon.
-                </p>
-              </div>
-            )}
+            <div aria-hidden="true" className="h-[2px] w-12 bg-gradient-to-r from-blue-600 to-indigo-600 mt-5 rounded-full select-none" />
 
-            {error && (
-              <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-4">
-                <p className="text-center text-sm font-medium text-red-400 sm:text-base">
-                  {error}
-                </p>
-              </div>
-            )}
-          </form>
-        </div>
+            <p className="mt-5 max-w-md text-xs sm:text-sm lg:text-base font-medium leading-relaxed text-slate-600 dark:text-slate-400">
+              Have a story idea, a feature suggestion, or just want to say
+              hello? We read every message and respond within 24 hours.
+            </p>
+
+            <div className="mt-8 grid grid-cols-3 gap-3 sm:gap-4 select-none w-full box-border">
+              {[
+                { value: "24h",   label: "Response time"  },
+                { value: "100%",  label: "Read rate"      },
+                { value: "Open",  label: "Source project" },
+              ].map(({ value, label }) => (
+                <div
+                  key={label}
+                  className="rounded-xl sm:rounded-2xl border border-slate-200/80 bg-white dark:border-white/5 dark:bg-[#111827]/40 p-3 text-center sm:p-4 shadow-sm"
+                >
+                  <p className="text-base sm:text-xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">{value}</p>
+                  <p className="mt-0.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                    {label}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <ul className="mt-6 sm:mt-8 space-y-3 list-none p-0 m-0 w-full box-border" aria-label="Contact channels">
+              {CONTACT_CHANNELS.map(({ icon: Icon, label, value, href, color, iconColor, hoverBorder }) => (
+                <li key={label} className="w-full">
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${label}: ${value}`}
+                    className={`group flex items-center gap-4 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#111827]/30 p-3 sm:p-4 shadow-sm backdrop-blur-md transition-all duration-200 hover:scale-[1.005] hover:shadow-md ${hoverBorder}`}
+                  >
+                    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue-500/10 bg-gradient-to-br ${color} ${iconColor} select-none`}>
+                      <Icon className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 select-none">
+                        {label}
+                      </span>
+                      <span className="block truncate text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors tracking-tight">
+                        {value}
+                      </span>
+                    </span>
+                    <ArrowUpRight
+                      className="h-4 w-4 shrink-0 text-slate-400 transition-all duration-150 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-slate-600 dark:group-hover:text-slate-300 select-none"
+                      aria-hidden="true"
+                    />
+                  </a>
+                </li>
+              ))}
+            </ul>
+
+            <div aria-hidden="true" className="relative mt-10 hidden items-end lg:flex select-none w-full box-border">
+              <div className="absolute inset-0 bg-blue-500/10 rounded-full blur-3xl -z-10 opacity-40 pointer-events-none" />
+              <img
+                src={storybook}
+                alt=""
+                className="relative z-10 w-full max-w-[280px] xl:max-w-[320px] object-contain drop-shadow-xl"
+              />
+            </div>
+          </div>
+
+          {/* GLOW ELEMENT */}
+          <div className="relative mt-16 hidden items-center justify-center lg:flex">
+            <div className="h-[320px] w-[320px] animate-pulse rounded-full bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 blur-3xl" />
+
+            <div className="absolute flex h-44 w-44 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] backdrop-blur-xl">
+              <Sparkles className="h-20 w-20 text-purple-400" />
+            </div>
+          </div>
+        </motion.div>
+
+      {/* RIGHT */}
+        <motion.div
+          initial={{ opacity: 0, x: 50 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+          className="relative"
+        >
+          <div className="absolute -inset-1 rounded-[2rem] bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-20 blur-2xl" />
+
+        <form
+  onSubmit={submitHandler}
+  className="relative space-y-6 overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.05] p-7 backdrop-blur-2xl transition-all duration-300 hover:border-purple-500/30 sm:p-10"
+>
+  {/* NAME */}
+  <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-[#0b1120]/80 px-5 py-3 transition-all duration-300 hover:border-purple-400/40 focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20">
+    <User className="h-5 w-5 flex-shrink-0 text-purple-300" />
+    <div className="flex w-full items-center gap-4 rounded-2xl border border-white/10 bg-[#0b1120]/80 px-5 py-3 transition-all duration-300 hover:border-purple-400/40 focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20">      <label className="text-[10px] font-bold uppercase tracking-wider text-purple-300/80 mb-1 block">
+        Full Name
+      </label>
+       <input
+           type="text"
+           name="fullname"
+           value={formData.fullname}
+           onChange={changeHandler}
+           placeholder="John Doe"
+           required
+  className="w-full min-w-0 bg-transparent border-none p-0 text-base text-white outline-none focus:ring-0"
+/>
+    </div>
+  </div>
+
+  {/* EMAIL */}
+  <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-[#0b1120]/80 px-5 py-3 transition-all duration-300 hover:border-blue-400/40 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20">
+    <Mail className="h-5 w-5 flex-shrink-0 text-blue-300" />
+    <div className="flex flex-col flex-grow min-w-full">
+      <label className="text-[10px] font-bold uppercase tracking-wider text-blue-300/80 mb-1 block">
+        Email Address
+      </label>
+     <input
+  type="email"
+  name="email"
+  value={formData.email}
+  onChange={changeHandler}
+  placeholder="john@example.com"
+  required
+  className="w-full min-w-0 bg-transparent border-none p-0 text-base text-white outline-none focus:ring-0"
+/>
+    </div>
+  </div>
+
+  {/* SUBJECT */}
+  <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-[#0b1120]/80 px-5 py-3 transition-all duration-300 hover:border-pink-400/40 focus-within:border-pink-500 focus-within:ring-2 focus-within:ring-pink-500/20">
+    <FileText className="h-5 w-5 flex-shrink-0 text-pink-300" />
+    <div className="flex flex-col flex-grow min-w-full">
+      <label className="text-[10px] font-bold uppercase tracking-wider text-pink-300/80 mb-1 block">
+        Subject
+      </label>
+      <input
+  type="text"
+  name="subject"
+  value={formData.subject}
+  onChange={changeHandler}
+  placeholder="Project Collaboration"
+  required
+  className="w-full min-w-0 bg-transparent border-none p-0 text-base text-white outline-none focus:ring-0"
+/>
+    </div>
+  </div>
+
+  {/* MESSAGE */}
+  <div className="flex items-start gap-4 rounded-2xl border border-white/10 bg-[#0b1120]/80 px-5 py-4 transition-all duration-300 hover:border-purple-400/40 focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20">
+    <Pencil className="mt-1 h-5 w-5 flex-shrink-0 text-purple-300" />
+    <div className="flex flex-col flex-grow min-w-full">
+      <label className="text-[10px] font-bold uppercase tracking-wider text-purple-300/80 mb-2 block">
+        Message
+      </label>
+      <textarea
+  rows={6}
+  name="message"
+  value={formData.message}
+  onChange={changeHandler}
+  placeholder="Tell us about your idea..."
+  maxLength={500}
+  required
+  className="w-full min-w-0 resize-none bg-transparent border-none p-0 text-base text-white outline-none focus:ring-0"
+/>
+<div className="mt-2 text-right text-xs text-slate-400">
+  {formData.message.length}/500
+</div>
+    </div>
+  </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  aria-busy={loading}
+                  aria-label={loading ? "Sending message…" : "Send message"}
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs sm:text-sm font-bold py-3.5 px-4 rounded-xl shadow-md shadow-blue-500/10 transition-all duration-150 active:scale-[0.98] disabled:opacity-50 select-none uppercase tracking-wider cursor-pointer mt-1 flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <span aria-hidden="true" className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      <span>Sending…</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
+                      <span>Send Message</span>
+                    </>
+                  )}
+                </button>
+
+  {/* SUCCESS & ERROR MESSAGE BLOCKS */}
+  {success && (
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-2xl border border-green-500/30 bg-green-500/10 px-4 py-4"
+    >
+      <p className="text-center text-sm font-medium text-green-400 sm:text-base">
+      🎉 Thank you! Your message has been sent successfully.      </p>
+    </motion.div>
+  )}
+
+  {error && (
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-4"
+    >
+      <p className="text-center text-sm font-medium text-red-400 sm:text-base">
+        {error}
+      </p>
+    </motion.div>
+  )}
+</form>
+        </motion.div>
       </div>
     </section>
   );
