@@ -16,12 +16,10 @@ import { SortOrder, Types } from "mongoose";
 import { GamificationService } from "../gamification/gamification.service";
 
 const MAX_SEARCH_TERM_LENGTH = 100;
-const escapeRegex = (text: string) => text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
 
 const escapeRegex = (text: string): string => {
   return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
 };
-const MAX_SEARCH_TERM_LENGTH = 100;
 
 interface ICursorPayload {
   value: string;
@@ -407,17 +405,15 @@ const toggleBookmark = async (postId: string, token: ITokenPayload) => {
     throw new ApiError(httpStatus.BAD_REQUEST, "User not found!");
   }
 
-  const postExists = await Post.exists({ _id: postId, isDeleted: { $ne: true } });
-  if (!postExists) {
-
-  const post = await Post.findOne({ _id: postId, isDeleted: { $ne: true } });
+  const post = await Post.findOne({
+    _id: postId,
+    isDeleted: { $ne: true },
+  });
 
   if (!post) {
-
     throw new ApiError(httpStatus.BAD_REQUEST, "Post not found!");
   }
 
-  // Check bookmark status atomically
   const isBookmarked = await Post.exists({
     _id: postId,
     bookmarks: user._id,
@@ -433,17 +429,17 @@ const toggleBookmark = async (postId: string, token: ITokenPayload) => {
       message: "Bookmark removed",
       bookmarked: false,
     };
-  } else {
-    await Post.updateOne(
-      { _id: postId },
-      { $addToSet: { bookmarks: user._id } }
-    );
-
-    return {
-      message: "Bookmark added",
-      bookmarked: true,
-    };
   }
+
+  await Post.updateOne(
+    { _id: postId },
+    { $addToSet: { bookmarks: user._id } }
+  );
+
+  return {
+    message: "Bookmark added",
+    bookmarked: true,
+  };
 };
 
 const updatePost = async (
