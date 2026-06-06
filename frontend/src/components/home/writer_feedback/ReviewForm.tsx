@@ -201,9 +201,9 @@ const ReviewForm = () => {
               type="button"
               onClick={handleSubmit}
               disabled={isLoading}
-              className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 mt-2"
+              className="w-full py-3 px-6 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 mt-4"
             >
-              {isLoading ? "Submitting..." : "Submit Review"}
+              {isLoading ? "Submitting..." : "Share Review ✨"}
             </button>
           </div>
         </div>
