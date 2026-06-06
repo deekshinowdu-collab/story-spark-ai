@@ -155,7 +155,7 @@ const getPosts = async (
         })),
       });
     }
-    
+
   }
 
   if (trendingTopic) {
@@ -253,14 +253,19 @@ const getPublishedPostsByAuthor = async (
   ];
 
   if (filters.searchTerm) {
-    andCondition.push({
-      $or: postSearchFields.map((field) => ({
-        [field]: {
-          $regex: filters.searchTerm,
-          $options: "i",
-        },
-      })),
-    });
+    const safeSearchTerm = escapeRegex(
+      filters.searchTerm.trim().slice(0, MAX_SEARCH_TERM_LENGTH)
+    );
+    if (safeSearchTerm) {
+      andCondition.push({
+        $or: postSearchFields.map((field) => ({
+          [field]: {
+            $regex: safeSearchTerm,
+            $options: "i",
+          },
+        })),
+      });
+    }
   }
 
   const sortCondition: { [key: string]: SortOrder } = {};
