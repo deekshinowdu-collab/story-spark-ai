@@ -128,7 +128,7 @@ export const consumeRateLimit = async (
   }
 };
 
-import { Redis } from "ioredis";
+import Redis from "ioredis";
 
 // We use ioredis to securely track token quotas
 const redisClient = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL) : new Redis();
