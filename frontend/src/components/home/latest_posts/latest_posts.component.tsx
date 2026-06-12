@@ -1,16 +1,25 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useGetLatestListsQuery } from "../../../redux/apis/post.api";
 import { Post } from "../../../models/post";
+import { useGetLatestListsQuery } from "../../../redux/apis/post.api";
 import LoadingAnimation from "../../loading/loading.component";
+
+const INITIAL_VISIBLE_COUNT = 6;
 
 const LatestPostsComponent = () => {
   const { data, isLoading, isError, refetch } =
     useGetLatestListsQuery(undefined);
 
   const navigate = useNavigate();
-
+  const [showAllPosts, setShowAllPosts] = useState(false);
   const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
+
+  const posts = (data?.posts ?? []) as Post[];
+
+  useEffect(() => {
+    setShowAllPosts(false);
+  }, [posts.length]);
+
 
   if (isLoading) return <LoadingAnimation />;
 
@@ -44,6 +53,12 @@ const LatestPostsComponent = () => {
     return true;
   });
 
+  const shouldShowLoadMore = uniquePosts.length > INITIAL_VISIBLE_COUNT;
+  const visiblePosts =
+    showAllPosts || !shouldShowLoadMore
+      ? uniquePosts
+      : uniquePosts.slice(0, INITIAL_VISIBLE_COUNT);
+
   const toggleAccordion = (postId: string) => {
     setExpandedPostId((prevId) =>
       prevId === postId ? null : postId
@@ -51,14 +66,13 @@ const LatestPostsComponent = () => {
   };
 
   return (
-    <section>
-      <h2 className="mb-6 text-2xl font-bold text-slate-900 dark:text-slate-100">
-        Latest Posts
-      </h2>
 
-      <div className="space-y-3">
-        {uniquePosts.length > 0 ? (
-          uniquePosts.map((post: Post) => {
+    <section className="w-full min-w-0 max-w-full">
+      <h2 className="mb-6 text-2xl font-bold text-slate-900 dark:text-gray-100">Latest Posts</h2>
+
+      <div className="max-w-full space-y-3">
+        {visiblePosts.length > 0 ? (
+          visiblePosts.map((post: Post) => {
             const isExpanded = expandedPostId === post._id;
 
             return (
@@ -70,7 +84,7 @@ const LatestPostsComponent = () => {
                   onClick={() => toggleAccordion(post._id)}
                   className="flex w-full items-center justify-between p-4 text-left font-bold text-slate-900 transition-colors hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800"
                 >
-                  <span className="pr-4 text-lg md:text-xl">
+                  <span className="min-w-0 pr-4 text-lg break-words md:text-xl">
                     {post.title}
                   </span>
 
@@ -87,7 +101,7 @@ const LatestPostsComponent = () => {
                   }`}
                 >
                   <div className="bg-slate-50 p-5 dark:bg-slate-800/50">
-                    <p className="mb-4 whitespace-pre-wrap text-sm leading-relaxed text-slate-700 dark:text-slate-300 md:text-base">
+                    <p className="mb-4 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-700 dark:text-slate-300 md:text-base">
                       {post.content || "No preview content available."}
                     </p>
 
@@ -107,9 +121,21 @@ const LatestPostsComponent = () => {
         ) : (
           <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-5 text-slate-500 dark:border-slate-800 dark:bg-slate-900/20 dark:text-slate-400">
             Posts are not available.
+          
           </div>
         )}
       </div>
+      {shouldShowLoadMore && !showAllPosts && (
+        <div className="mt-6">
+          <button
+            type="button"
+            onClick={() => setShowAllPosts(true)}
+            className="motion-cta cursor-pointer rounded-lg border border-slate-300/70 bg-slate-100 px-5 py-2.5 text-sm font-semibold text-slate-800 shadow-sm hover:bg-white dark:border-white/15 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10"
+          >
+            Load More
+          </button>
+        </div>
+      )}
     </section>
   );
 };
