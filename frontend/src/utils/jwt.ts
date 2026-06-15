@@ -39,10 +39,12 @@ export const decodedToken = (token: string): CustomJwtPayload => {
     throw new Error("Token payload is not a valid object.");
   }
 
+
   // 1. Validate required userId or _id claim
   const idToUse = decoded.userId || decoded._id;
   if (typeof idToUse !== "string" || idToUse.trim() === "") {
     throw new Error("Token is missing a valid 'userId' or '_id' claim.");
+
   }
 
   // 2. Validate required email claim
@@ -71,7 +73,7 @@ export const decodedToken = (token: string): CustomJwtPayload => {
     throw new Error("Token is missing a valid 'subscriptionType' claim.");
   }
 
-  const validSubscriptions = ["free", "premium"];
+  const validSubscriptions = ["free", "pro", "premium"];
   if (!validSubscriptions.includes(decoded.subscriptionType)) {
     throw new Error(`Token 'subscriptionType' claim must be one of: ${validSubscriptions.join(", ")}`);
   }

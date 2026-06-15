@@ -29,6 +29,15 @@ export interface AudioPlayerHandle {
   currentWordIndex: number;
 }
 
+export interface Review {
+  _id?: string;
+  name: string;
+  role: string;
+  feedback: string;
+  imgSrc?: string;
+  rating: number;
+}
+
 interface AudioPlayerProps {
   text: string;
   title?: string;
@@ -43,12 +52,30 @@ const controlButtonBaseClass =
 
 const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
   ({ text, title = "Story narration", onWordIndexChange, onPlaybackStateChange }, ref) => {
-    const speech = useSpeechSynthesis(text);
+    const [voiceGender, setVoiceGender] = useState<"female" | "male">(() => {
+      try {
+        const saved = localStorage.getItem("story-spark-narration-gender");
+        return (saved === "female" || saved === "male") ? saved : "female";
+      } catch {
+        return "female";
+      }
+    });
+
+    useEffect(() => {
+      try {
+        localStorage.setItem("story-spark-narration-gender", voiceGender);
+      } catch (e) {
+        console.warn(e);
+      }
+    }, [voiceGender]);
+
+    const speech = useSpeechSynthesis(text, voiceGender);
     const preview = useVoicePreview();
     const favorites = useVoiceFavorites();
     const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
     const speedSelectId = useId();
+    const voiceGenderSelectId = useId();
     const languageSelectId = useId();
     const voiceSelectId = useId();
 
@@ -95,7 +122,53 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
           speech.setSelectedVoiceId(displayedVoices[0].id);
         }
       }
-    }, [showFavoritesOnly, displayedVoices, speech]);
+    useEffect(() => {
+      const handleKeyDown = (event: KeyboardEvent) => {
+        const target = event.target as HTMLElement;
+        if (
+          target &&
+          (target.tagName === "INPUT" ||
+            target.tagName === "TEXTAREA" ||
+            target.tagName === "SELECT" ||
+            target.isContentEditable)
+        ) {
+          return;
+        }
+
+        if (event.key === " ") {
+          event.preventDefault();
+          if (speech.isPlaying) {
+            speech.pause();
+          } else if (speech.isPaused) {
+            speech.resume();
+          } else {
+            speech.play();
+          }
+        } else if (event.key === "ArrowUp" || event.key === "ArrowRight") {
+          event.preventDefault();
+          const currentIndex = SPEED_OPTIONS.indexOf(speech.rate as any);
+          if (currentIndex !== -1 && currentIndex < SPEED_OPTIONS.length - 1) {
+            speech.setRate(SPEED_OPTIONS[currentIndex + 1]);
+          } else if (speech.rate < 2) {
+            speech.setRate(Math.min(2, speech.rate + 0.25));
+          }
+        } else if (event.key === "ArrowDown" || event.key === "ArrowLeft") {
+          event.preventDefault();
+          const currentIndex = SPEED_OPTIONS.indexOf(speech.rate as any);
+          if (currentIndex !== -1 && currentIndex > 0) {
+            speech.setRate(SPEED_OPTIONS[currentIndex - 1]);
+          } else if (speech.rate > 0.5) {
+            speech.setRate(Math.max(0.5, speech.rate - 0.25));
+          }
+        }
+      };
+
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    }, [speech]);
+
 
     const isLoading = speech.isSupported && !speech.isReady;
     const canNarrate = speech.isSupported && speech.isReady && text.trim().length > 0;
@@ -163,13 +236,13 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
           </div>
         ) : (
           <div className="mt-4 space-y-4">
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <button
                 type="button"
                 role="button"
                 aria-label="Play narration from the beginning"
                 title="Play from the beginning"
-                onClick={speech.play}
+                onClick={() => speech.play()}
                 disabled={!canNarrate}
                 className={`${controlButtonBaseClass} border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-200 dark:hover:bg-indigo-500/20`}
               >
@@ -216,13 +289,12 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
                 Stop
               </button>
             </div>
-
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(140px,160px)_minmax(160px,1fr)_minmax(160px,1fr)_minmax(200px,1fr)] lg:items-end">
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
                   <span>Progress</span>
                   <span aria-live="polite">
-                    {spokenWordCount} / {speech.progress.totalWords} words
+                    {speech.isPlaying || speech.isPaused ? spokenWordCount : 0} / {speech.progress.totalWords} words
                   </span>
                 </div>
                 <div
@@ -240,28 +312,94 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label
-                  htmlFor={speedSelectId}
-                  className="text-sm font-medium text-slate-700 dark:text-slate-300"
-                >
-                  Playback speed
-                </label>
-                <div className="relative">
-                  <select
-                    id={speedSelectId}
-                    aria-label="Playback speed"
-                    role="combobox"
-                    value={speech.rate}
-                    onChange={(event) => speech.setRate(Number(event.target.value))}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-indigo-400 dark:focus:ring-indigo-500/20"
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label
+                    htmlFor={speedSelectId}
+                    className="text-sm font-medium text-slate-700 dark:text-slate-300"
                   >
-                    {SPEED_OPTIONS.map((option) => (
-                      <option key={option} value={option}>
-                        {option.toFixed(2).replace(/\.00$/, "")}&times;
-                      </option>
-                    ))}
-                  </select>
+                    Playback speed
+                  </label>
+                  <div className="relative">
+                    <select
+                      id={speedSelectId}
+                      aria-label="Playback speed"
+                      role="combobox"
+                      value={speech.rate}
+                      onChange={(event) => speech.setRate(Number(event.target.value))}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-indigo-400 dark:focus:ring-indigo-500/20"
+                    >
+                      {SPEED_OPTIONS.map((option) => (
+                        <option key={option} value={option}>
+                          {option.toFixed(2).replace(/\.00$/, "")}&times;
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label
+                    htmlFor={voiceGenderSelectId}
+                    className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                  >
+                    Voice
+                  </label>
+                  <div className="relative">
+                    <select
+                      id={voiceGenderSelectId}
+                      aria-label="Voice gender"
+                      role="combobox"
+                      value={voiceGender}
+                      onChange={(event) => setVoiceGender(event.target.value as "female" | "male")}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-indigo-400 dark:focus:ring-indigo-500/20"
+                    >
+                      <option value="female">Female voice</option>
+                      <option value="male">Male voice</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Pitch
+                    </label>
+                    <div className="space-y-2">
+                      <input
+                        type="range"
+                        min={0.5}
+                        max={2}
+                        step={0.1}
+                        value={speech.pitch}
+                        onChange={(event) => speech.setPitch(Number(event.target.value))}
+                        className="w-full accent-indigo-500"
+                      />
+                      <div className="text-xs text-slate-500 dark:text-slate-400">
+                        {speech.pitch.toFixed(1)}x
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Volume
+                    </label>
+                    <div className="space-y-2">
+                      <input
+                        type="range"
+                        min={0}
+                        max={1}
+                        step={0.05}
+                        value={speech.volume}
+                        onChange={(event) => speech.setVolume(Number(event.target.value))}
+                        className="w-full accent-indigo-500"
+                      />
+                      <div className="text-xs text-slate-500 dark:text-slate-400">
+                        {Math.round(speech.volume * 100)}%
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -297,16 +435,15 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
                 >
                   Voice
                 </label>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
                     onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
                     title={showFavoritesOnly ? "Show all voices" : "Show favorites only"}
-                    className={`rounded-xl border px-2.5 py-2.5 text-sm font-semibold transition-all duration-200 ${
-                      showFavoritesOnly
+                    className={`rounded-xl border px-2.5 py-2.5 text-sm font-semibold transition-all duration-200 ${showFavoritesOnly
                         ? "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
                         : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
-                    }`}
+                      }`}
                     aria-label={showFavoritesOnly ? "Show all voices" : "Show favorites only"}
                   >
                     <Star className="h-4 w-4" fill={showFavoritesOnly ? "currentColor" : "none"} />
@@ -354,11 +491,10 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
                     }
                     title="Listen to current voice preview"
                     aria-label="Play voice preview"
-                    className={`inline-flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 dark:focus-visible:ring-offset-slate-950 ${
-                      preview.isPreviewPlaying
+                    className={`inline-flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 dark:focus-visible:ring-offset-slate-950 ${preview.isPreviewPlaying
                         ? "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300"
                         : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                    }`}
+                      }`}
                   >
                     <Volume className="h-4 w-4" />
                     Preview
@@ -377,11 +513,10 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
                         ? "Remove from favorites"
                         : "Add to favorites"
                     }
-                    className={`inline-flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 dark:focus-visible:ring-offset-slate-950 ${
-                      favorites.isFavorite(speech.selectedVoiceId)
+                    className={`inline-flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 dark:focus-visible:ring-offset-slate-950 ${favorites.isFavorite(speech.selectedVoiceId)
                         ? "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
                         : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                    }`}
+                      }`}
                   >
                     <Star
                       className="h-4 w-4"

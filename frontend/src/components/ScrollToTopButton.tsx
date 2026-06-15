@@ -10,7 +10,9 @@ const ScrollToTopButton = () => {
 
     window.addEventListener("scroll", handleScroll, { passive: true });
 
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   const scrollToTop = () => {
@@ -32,15 +34,17 @@ const ScrollToTopButton = () => {
         cursor: "pointer",
         background: "linear-gradient(135deg, #3b82f6, #6366f1)",
         color: "#ffffff",
-        fontSize: "1.25rem",
+        fontSize: "1rem",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        boxShadow: "0 4px 15px rgba(59, 130, 246, 0.4)",
+        boxShadow: "0 6px 18px rgba(59, 130, 246, 0.25)",
         opacity: isVisible ? 1 : 0,
         pointerEvents: isVisible ? "auto" : "none",
-        transform: isVisible ? "translateY(0)" : "translateY(12px)",
-        transition: "opacity 0.3s ease, transform 0.3s ease",
+        transform: isVisible
+          ? "translateY(0) scale(1)"
+          : "translateY(12px) scale(0.95)",
+        transition: "all 0.3s ease",
         zIndex: 9999,
       }}
     >
