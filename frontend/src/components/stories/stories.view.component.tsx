@@ -98,7 +98,31 @@ const StoriesViewComponent: React.FC<StoriesComponentProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const [showWorldMap, setShowWorldMap] = useState<boolean>(false);
-const [, setShowRemix] = useState<boolean>(false);
+  const [, setShowRemix] = useState<boolean>(false);
+  const [isFocusMode, setIsFocusMode] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFocusMode(!!document.fullscreenElement);
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFocusMode = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        toast.error(`Error attempting to enable focus mode: ${err.message}`);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
   const [createPost] = useCreatePostMutation();
   const [deletePost] = useDeletePostMutation();
   const { data: profile } = useGetProfileInfoQuery(undefined, { skip: !isLogin });
@@ -736,7 +760,7 @@ if (isLoading) {
   }
 
   return (
-    <div className="mt-16 px-4 sm:px-6 lg:px-8 max-w-8xl mx-auto pb-10">
+    <div className={isFocusMode ? "fixed inset-0 z-[9999] bg-slate-900 overflow-y-auto pb-10" : "mt-16 px-4 sm:px-6 lg:px-8 max-w-8xl mx-auto pb-10"}>
       <style>
         {`
           @keyframes fadeInUp {
@@ -748,9 +772,10 @@ if (isLoading) {
           }
         `}
       </style>
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in-up">
-        <div className="col-span-1 lg:col-span-8 flex flex-col">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+      <div className={isFocusMode ? "max-w-4xl mx-auto py-10 px-4 sm:px-6 animate-fade-in-up" : "grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in-up"}>
+        <div className={isFocusMode ? "flex flex-col" : "col-span-1 lg:col-span-8 flex flex-col"}>
+          {!isFocusMode && (
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
             <div>
               <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-300 to-blue-400 mb-2">
                 {selectedStory?.title}
@@ -792,14 +817,29 @@ if (isLoading) {
                 )}
               </div>
             </div>
-          </div>
+          )}
 
-          <div className="bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 p-8 rounded-2xl shadow-2xl relative overflow-hidden">
+          <div className={`bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl relative overflow-hidden ${isFocusMode ? 'p-8 sm:p-12' : 'p-8'}`}>
             <div className="absolute top-[-50px] right-[-50px] w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
             <div className="absolute bottom-[-50px] left-[-50px] w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
             
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-              <h3 className="text-xl font-bold text-slate-200 relative z-10">
+            {isFocusMode && (
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 border-b border-slate-700/50 pb-6 gap-4 relative z-10">
+                <h1 className="text-3xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-300 to-blue-400">
+                  {selectedStory?.title}
+                </h1>
+                <button 
+                  onClick={toggleFocusMode}
+                  className="shrink-0 text-slate-300 hover:text-white bg-slate-700/50 hover:bg-slate-700 px-4 py-2 rounded-lg transition-colors flex items-center gap-2 font-medium"
+                >
+                  <i className="fa-solid fa-compress"></i> <span className="hidden sm:inline">Exit Focus</span> (ESC)
+                </button>
+              </div>
+            )}
+
+            {!isFocusMode && (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                <h3 className="text-xl font-bold text-slate-200 relative z-10">
                 Generated Story
               </h3>
               <div className="flex flex-wrap items-center gap-2 relative z-10">
@@ -845,6 +885,13 @@ if (isLoading) {
                 </button>
                 <button
                   type="button"
+                  className="rounded-lg px-4 py-2 bg-teal-700 text-slate-200 font-semibold cursor-pointer hover:bg-teal-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={toggleFocusMode}
+                >
+                  <i className="fa-solid fa-expand"></i> Focus
+                </button>
+                <button
+                  type="button"
                   id="publish-story-btn"
                   className={`rounded-lg px-5 py-2 font-semibold flex items-center space-x-2 cursor-pointer bg-blue-600 text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
                     loading ? "" : "hover:bg-blue-500 hover:shadow-lg active:scale-95"
@@ -855,7 +902,7 @@ if (isLoading) {
                   {loading ? "Publishing..." : "Publish"}
                 </button>
               </div>
-            </div>
+            )}
 
             {selectedStory.enhancedPrompt && (
               <div className="mb-6 p-4 bg-indigo-900/30 border border-indigo-700/50 rounded-xl relative z-10">
@@ -965,8 +1012,10 @@ if (isLoading) {
               />
             </div>
           </div>
-          <div className="mt-7">
-            <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-xl p-6 mb-8">
+          
+          {!isFocusMode && (
+            <div className="mt-7">
+              <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-xl p-6 mb-8">
               <h3 className="text-lg font-bold text-slate-200 mb-4">
                 Select Topics
               </h3>
@@ -1166,12 +1215,15 @@ if (isLoading) {
                   </div>
                 )}
               </div>
+              </div>
             )}
           </div>
+          )}
         </div>
 
-        <div className="col-span-1 lg:col-span-4">
-          <GeneratedStoryTimeline
+        {!isFocusMode && (
+          <div className="col-span-1 lg:col-span-4">
+            <GeneratedStoryTimeline
             content={selectedStory.content}
             title={selectedStory.title}
             narrationState={narrationState}
@@ -1218,7 +1270,7 @@ if (isLoading) {
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
       {showWorldMap && selectedStory && (
         <StoryWorldMap
