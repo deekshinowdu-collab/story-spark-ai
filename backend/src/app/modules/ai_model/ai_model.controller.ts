@@ -115,7 +115,7 @@ const aiFreeModelAlternateEndings = catchAsync(
   }
 );
 
-const aiModelGenerateStream = async (req: Request, res: Response) => {
+const aiModelGenerateStream = catchAsync(async (req: Request, res: Response) => {
   const { prompt, wordLength, numStories } = req.body;
   const guard = res.locals.quotaRefundGuard;
 
@@ -164,7 +164,7 @@ await runWithQuotaCleanup(guard, async () => {
     throw error;
   }
 });
-};
+});
 const aiModelRemix = catchAsync(async (req: Request, res: Response) => {
   const payload = req.body as IRemixPayload;
   const guard = res.locals.quotaRefundGuard;
