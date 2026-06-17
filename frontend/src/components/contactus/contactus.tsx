@@ -1,4 +1,4 @@
-﻿import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import {
   Mail,
@@ -52,37 +52,210 @@ const CONTACT_CHANNELS = [
     iconColor: "text-purple-500 dark:text-purple-400",
     hoverBorder: "hover:border-purple-500/30",
   },
-];
+] as const;
 
-const FORM_FIELDS = [
-  {
-    id: "contact-fullname",
-    name: "fullname" as FormField,
-    type: "text",
-    label: "Full Name",
-    placeholder: "Jane Smith",
-    icon: User,
-    autoComplete: "name",
-  },
-  {
-    id: "contact-email",
-    name: "email" as FormField,
-    type: "email",
-    label: "Email Address",
-    placeholder: "jane@example.com",
-    icon: Mail,
-    autoComplete: "email",
-  },
-  {
-    id: "contact-subject",
-    name: "subject" as FormField,
-    type: "text",
-    label: "Subject",
-    placeholder: "What's this about?",
-    icon: FileText,
-    autoComplete: "off",
-  },
-];
+const FORM_FIELDS: Array<{
+  id: string;
+  name: FormField;
+  type: string;
+  label: string;
+  placeholder: string;
+  icon: React.ElementType;
+  autoComplete: string;
+}> = [
+    {
+      id: "contact-fullname",
+      name: "fullname",
+      type: "text",
+      label: "Full Name",
+      placeholder: "Jane Smith",
+      icon: User,
+      autoComplete: "name",
+    },
+    {
+      id: "contact-email",
+      name: "email",
+      type: "email",
+      label: "Email Address",
+      placeholder: "jane@example.com",
+      icon: Mail,
+      autoComplete: "email",
+    },
+    {
+      id: "contact-subject",
+      name: "subject",
+      type: "text",
+      label: "Subject",
+      placeholder: "What's this about?",
+      icon: FileText,
+      autoComplete: "off",
+    },
+  ];
+
+const STATS = [
+  { value: "24h", label: "Response time" },
+  { value: "100%", label: "Read rate" },
+  { value: "Open", label: "Source project" },
+] as const;
+
+// ΓöÇΓöÇΓöÇ FloatingLabelInput ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+interface FloatingLabelInputProps {
+  id: string;
+  name: FormField;
+  type: string;
+  label: string;
+  icon: React.ElementType;
+  autoComplete: string;
+  value: string;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  error?: boolean;
+}
+
+const FloatingLabelInput = ({
+  id,
+  name,
+  type,
+  label,
+  icon: Icon,
+  autoComplete,
+  value,
+  onChange,
+  error = false,
+}: FloatingLabelInputProps) => {
+  const [focused, setFocused] = useState(false);
+  const isFloated = focused || value.length > 0;
+
+  return (
+    <div className="contact-float-field group">
+      <div className="relative">
+        {/* Icon */}
+        <span
+          className={`contact-float-icon ${isFloated ? "contact-float-icon--active" : ""}`}
+          aria-hidden="true"
+        >
+          <Icon className="h-4 w-4" />
+        </span>
+
+        {/* Input */}
+        <input
+          id={id}
+          type={type}
+          name={name}
+          value={value}
+          onChange={onChange}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          required
+          autoComplete={autoComplete}
+          placeholder=" "
+          aria-label={label}
+          aria-invalid={error}
+          className={[
+            "contact-float-input",
+            isFloated ? "contact-float-input--active" : "",
+            error ? "contact-float-input--error" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        />
+
+        {/* Floating label */}
+        <label
+          htmlFor={id}
+          className={`contact-float-label ${isFloated ? "contact-float-label--floated" : ""}`}
+        >
+          {label}
+        </label>
+
+        {/* Animated focus underline */}
+        <span className="contact-float-underline" aria-hidden="true" />
+      </div>
+    </div>
+  );
+};
+
+// ΓöÇΓöÇΓöÇ FloatingLabelTextarea ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+interface FloatingLabelTextareaProps {
+  value: string;
+  onChange: (e: ChangeEvent<HTMLTextAreaElement>) => void;
+  error?: boolean;
+}
+
+const FloatingLabelTextarea = ({
+  value,
+  onChange,
+  error = false,
+}: FloatingLabelTextareaProps) => {
+  const [focused, setFocused] = useState(false);
+  const isFloated = focused || value.length > 0;
+  const maxLength = 500;
+
+  return (
+    <div className="contact-float-field group">
+      <div className="relative">
+        {/* Icon */}
+        <span
+          className={`contact-float-icon contact-float-icon--textarea ${isFloated ? "contact-float-icon--active" : ""
+            }`}
+          aria-hidden="true"
+        >
+          <Pencil className="h-4 w-4" />
+        </span>
+
+        {/* Textarea */}
+        <textarea
+          id="contact-message"
+          rows={5}
+          name="message"
+          value={value}
+          onChange={onChange}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          required
+          maxLength={maxLength}
+          placeholder=" "
+          aria-label="Message"
+          aria-invalid={error}
+          className={[
+            "contact-float-input contact-float-textarea",
+            isFloated ? "contact-float-input--active" : "",
+            error ? "contact-float-input--error" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        />
+
+        {/* Floating label */}
+        <label
+          htmlFor="contact-message"
+          className={`contact-float-label contact-float-label--textarea ${isFloated ? "contact-float-label--floated" : ""
+            }`}
+        >
+          Message
+        </label>
+
+        {/* Character counter */}
+        <div 
+          className={`absolute bottom-2 right-3 text-[10px] font-medium tracking-wide transition-opacity duration-300 ${
+            focused || value.length > 0 ? "opacity-100" : "opacity-0"
+          } ${
+            value.length >= maxLength ? "text-red-400" : "text-slate-500"
+          }`}
+          aria-live="polite"
+        >
+          {value.length}/{maxLength}
+        </div>
+
+        {/* Animated focus underline */}
+        <span className="contact-float-underline" aria-hidden="true" />
+      </div>
+    </div>
+  );
+};
+
+// ΓöÇΓöÇΓöÇ Main Contact component ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 const STATS = [
   { value: "24h", label: "Response time" },
