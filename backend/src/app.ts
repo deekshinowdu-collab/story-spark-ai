@@ -5,7 +5,6 @@ import express, {
   Response,
 } from "express";
 import helmet from "helmet";
-import rateLimit from "express-rate-limit";
 import cors from "cors";
 import httpStatus from "http-status";
 import cookieParser from "cookie-parser";
@@ -13,6 +12,7 @@ import config from "./config";
 import { Routers } from "./router";
 import globalErrorHandler from "./app/middleware/global.error.handler";
 import leaderboardRoute from "./routes/leaderboard.route";
+import globalRateLimiter from "./app/middleware/global.rate-limiter";
 
 
 const app: Application = express();
@@ -56,12 +56,7 @@ app.use(
 
 // Rate limiter — placed after CORS so OPTIONS preflight requests are
 // never counted against the limit before CORS has a chance to respond.
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: "Too many requests, please try again later.",
-});
-app.use(limiter);
+app.use(globalRateLimiter);
 
 // ─── 1. FIXED: ENFORCED HARDENED PAYLOAD LIMITS TO PREVENT DoS ───
 app.use(express.json({ limit: "2mb" }));
