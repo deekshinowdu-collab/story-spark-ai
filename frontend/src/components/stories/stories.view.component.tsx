@@ -26,6 +26,7 @@ import StoryTranslator from "../translate/StoryTranslator";
 import StoryEndingGenerator from "./StoryEndingGenerator";
 import StoryImprovementSuggestions from "./StoryImprovementSuggestions";
 import StoryRecommendations from "./StoryRecommendations";
+import StoryCollaboration from "./StoryCollaboration";
 
 export interface IStories {
   uuid: string;
@@ -65,6 +66,7 @@ const StoriesViewComponent: React.FC<StoriesComponentProps> = ({
   const [showEndingGenerator, setShowEndingGenerator] = useState(false);
   const [showImprovementPanel, setShowImprovementPanel] = useState(false);
   const [showRecommendations, setShowRecommendations] = useState(false);
+  const [showCollaboration, setShowCollaboration] = useState(false);
 
   const [showWorldMap, setShowWorldMap] = useState<boolean>(false);
 
