@@ -2,12 +2,9 @@ import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { isLoggedIn, removeUserInfo } from "../../services/auth.service";
 import ThemeToggle from "../theme/theme_toggle.component";
-<<<<<<< HEAD
-=======
 import { ArrowRight, Sparkles } from "lucide-react";
 
 
->>>>>>> 51a9dfc3 (Update frontend components)
 
 import { useNavigate, useLocation } from "react-router-dom";
 
