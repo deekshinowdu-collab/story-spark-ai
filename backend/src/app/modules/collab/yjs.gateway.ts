@@ -1,14 +1,23 @@
-import { Server, Socket } from 'socket.io';
+import { Server, Socket, Namespace } from 'socket.io';
 import * as Y from 'yjs';
-import { debounce } from 'lodash';
 import { CollabService } from './collab.service';
+
+// Custom debounce function to avoid lodash dependency
+function debounce(func: Function, wait: number) {
+  let timeout: any;
+  return function(this: any, ...args: any[]) {
+    const context = this;
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(context, args), wait);
+  };
+}
 
 /**
  * Yjs gateway that syncs a Yjs document over a Socket.io namespace
  * and persists the document state to MongoDB.
  */
 export class YjsGateway {
-  private readonly io: Server;
+  private readonly io: Namespace;
   private readonly docs: Map<string, Y.Doc> = new Map();
   private readonly debouncedSaves: Map<string, () => void> = new Map();
   private readonly saveDelay = 2000; // ms
